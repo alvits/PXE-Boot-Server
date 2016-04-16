@@ -1,0 +1,1 @@
+authconfig --enableshadow --enablemd5

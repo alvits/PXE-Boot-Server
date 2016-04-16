@@ -1,0 +1,684 @@
+# ensure script is sourced
+if [ "$_" == "$0" ]; then
+	echo "Don't run this script. Source it."
+	exit
+fi
+# source kickstart
+if [ -f /etc/sysconfig/kickstart ]; then
+. /etc/sysconfig/kickstart
+fi
+# Set up exacutable locations
+ECHO=/bin/echo
+PRINTF=/usr/bin/printf
+IPCALC=/bin/ipcalc
+RM=/bin/rm
+TR=/usr/bin/tr
+CAT=/bin/cat
+CP=/bin/cp
+MKDIR=/bin/mkdir
+MV=/bin/mv
+M4=/usr/bin/m4
+SED=/bin/sed
+GREP=/bin/grep
+AWK=/bin/awk
+CHMOD=/bin/chmod
+FIND=/bin/find
+MKISOFS=/usr/bin/mkisofs
+DEV=${DEV:-eth0}
+IPADDRSHOW="/sbin/ip addr show dev ${DEV}"
+STATUS=1
+ISOLINUXCFG=/tmp/isolinux.cfg.$$
+KS=$(/usr/bin/mktemp -u /tmp/ks.XXXXXXXXXX)
+INETADDR=$(${IPADDRSHOW}|${AWK} '$NF ~ /'${DEV}'/ {print $2}')
+INETADDR=${INETADDR%%/*}
+SOURCE=http://${INETADDR}/os
+TFTPBOOTDIR=.
+[ -d /tftpboot/pxelinux.cfg ] && TFTPBOOTDIR=/tftpboot/pxelinux.cfg
+[ -d /var/lib/tftpboot/pxelinux.cfg ] && TFTPBOOTDIR=/var/lib/tftpboot/pxelinux.cfg
+KICKSTART=.
+[ -d /usr/local/Downloads/kickstart ] && KICKSTART=/usr/local/Downloads/kickstart
+[ -d /var/www/kickstart ] && KICKSTART=/var/www/kickstart
+trap cleanup 0 1 2 3 9 15
+
+cleanup() {
+	${RM} -f ${KS} ${ISOLINUXCFG} ${KS}.$$
+	exit 1
+}
+
+# parameters:
+# prompt message
+yesno() {
+	while [ -z "${YESNO}" ]; do
+		printf "${1} " >&2
+		read YESNO
+		YESNO=$(${ECHO} ${YESNO}|${TR} '[:lower:]' '[:upper:]')
+		case ${YESNO} in
+			Y|YES)
+				return 0
+				;;
+			N|NO)
+				return 1
+				;;
+			*)
+				YESNO=
+				;;
+		esac
+	done
+}
+
+# parameters:
+# prompt message
+# error message
+get_IP() {
+	local IP=""
+	local SEPARATOR=" "
+	local MASK=""
+	while [ -z "${IP}" ]; do
+		${PRINTF} "$1 " >&2
+		read IP MASK
+		if [ -z ${MASK} ]; then
+			MASK=${IP##*/}
+			IP=${IP%%/*}
+			[ "${IP}" != "${MASK}" ] || MASK=""
+			SEPARATOR=/
+		fi
+		if ${IPCALC} -s -m ${IP}/32>/dev/null; then
+			continue
+		else
+			IP=""
+			${PRINTF} "$2\n" >&2
+		fi
+	done
+	if [ -z "${MASK}" ]; then
+		 SEPARATOR=""
+	fi
+	${PRINTF} "${IP}${SEPARATOR}${MASK}"
+}
+
+# parameters:
+# disk device (default: sda)
+# swap size in MB (default: recommended)
+# source (default ${INETADDR})
+# version e.g. rhel/5.3 4.7
+# architecture
+# language (default: en_US.UTF-8)
+# key (default: --skip) or language support (default: en_SG.UTF-8 en_US.UTF-8 en_SG.UTF-8)
+# root password
+# network
+# function name to run for partition information (default: partition)
+# additional repository
+initialize() {
+	local OSVER=${4:-"${OSVERSION}"}
+	local ARCH=${5:-"${ARCH}"}
+	local SOURCE=${3:-"${SOURCE}"}
+	if [ ${OSVER%%/*} == "ovs" ]; then
+		${CAT}<<-EOF
+			eula Accepted
+			ovsagent --iscrypted $6$NhS869UYdMRXwsbp$XejhWedESydl48CZCJG1FWUcrpo8YpvIz1vKQOIglyS97YZTIyP8.1zzM.CvuWkJlP89lASbYNzOZci2A3mJc1
+			ovsmgmntif ${INTFACE:-eth0}
+		EOF
+		if [ ${OPSTACK:-0} -eq 1 ]; then
+			${CAT}<<-EOF
+				bootloader --location=mbr --dom0_mem="3072M dom0_max_vcpus=4 dom0_vcpus_pin=true extra_guest_irqs=64,1024" --driveorder=${1:-sda}
+			EOF
+			ksnetwork --onboot yes --device ${privateETH:-eth2} --bootproto static --ip ${privateIP} --netmask $(ipcalc -m $privateIP/$privatePREFIX|sed 's/NETMASK=//g') --gateway ${GATEWAY} ${9} --noipv6
+			repo ${11}
+		else
+			${CAT}<<-EOF
+				bootloader --location=mbr --dom0_mem="2048M dom0_max_vcpus=4 dom0_vcpus_pin=true extra_guest_irqs=64,1024" --driveorder=${1:-sda}
+			EOF
+			ksnetwork --onboot yes --device ${INTFACE:-eth0} --bootproto static --ip ${IPADDR} --netmask $(ipcalc -m ${IPADDR}${SLASH}${NETMASK}|sed 's/NETMASK=//g') --gateway ${GATEWAY} ${9} --noipv6
+		fi
+	else
+		${CAT}<<-EOF
+			bootloader --location=mbr --driveorder=${1:-sda} --append="quiet"
+		EOF
+		ksnetwork --onboot yes --device ${INTFACE:-eth0} --bootproto static --ip ${IPADDR} --netmask $(ipcalc -m ${IPADDR}${SLASH}${NETMASK}|sed 's/NETMASK=//g') --gateway ${GATEWAY} ${9} --noipv6
+		repo ${11}
+	fi
+	${CAT}<<-EOF
+		%include ${SOURCE}/include/custom/${OSVER%%/*}/authconfig.${OPSTACK:-0}.ks
+		%include ${SOURCE}/include/custom/${OSVER%%/*}/firewall.${OPSTACK:-0}.ks
+		%include ${SOURCE}/include/custom/${OSVER%%/*}/services.${OPSTACK:-0}.ks
+		selinux --permissive
+		install
+		keyboard us
+		lang ${6:-en_US.UTF-8}
+		rootpw --iscrypted ${8:-"\$1\$/D0WZ/Qx\$hiV59A2D7YIq/Th3OqZM/1"}
+		sshpw --username=alvits "\$1\$uhUskY/C\$WvZ.5zv54L0Txbacam9iC0" --iscrypted
+		timezone --utc America/Los_Angeles
+		#$(zerombr ${OSVER%.*})
+		reboot --eject
+		# The following is the partition information you requested
+		# Note that any partitions you deleted are not expressed
+		# here so unless you clear all partitions first, this is
+		# not guaranteed to work
+		#clearpart --all --drives=${1:-sda} --disklabel=gpt
+	EOF
+	${10:-partition} "$@"
+	${CAT}<<-EOF
+		%packages --ignoremissing --excludedocs
+		%include ${SOURCE}/include/custom/${OSVER%%.*}/core.ks
+		%include ${SOURCE}/include/custom/${OSVER%%/*}/addons.ks
+	EOF
+	if [ ${XEN:-0} -eq 1 ]; then
+		${ECHO} @xen
+		if [ ${KDEV:-0} -eq 1 ]; then
+			${ECHO} @xen-devel
+		fi
+	else
+		${ECHO} "@compat-libraries"
+	fi
+	${ECHO} %include ${SOURCE}/include/custom/excludes.core
+	if [ ${OPSTACK:-0} -eq 1 ]; then
+		${CAT}<<-EOF
+			%include ${SOURCE}/include/custom/opstack/core.ks
+		EOF
+		if [ "${HOST}" == "${CONTROLLER:-cas-opstack1}" ]; then
+			${CAT}<<-EOF
+				%include ${SOURCE}/include/custom/opstack/controller.ks
+			EOF
+		fi
+		if [ -n "${CINDERHOST}" ]; then
+			if [ "${HOST}" == "${CINDERHOST}" ]; then
+				${CAT}<<-EOF
+					openstack-cinder
+				EOF
+			fi
+		fi
+	fi
+	${CAT}<<-EOF
+		%end
+
+		%pre
+		lvm vgremove -f \$(lvm vgs --noheadings -o vg_name 2>/dev/null) 2>/dev/null
+		parted -a optimal -s /dev/${1:-sda} mklabel gpt 2>/dev/null
+	EOF
+	if [ ${OSVER%/*} != "oel" ]; then
+		${CAT}<<-EOF
+			chmod +w /etc/hosts
+			IPADDR=\$(ip -f inet -o addr show dev ${INTFACE:-eth0}|sed -n 's/^.*inet *\([^\/]*\)\/.*$/\1/p')
+			HOSTNAME=\$(hostname)
+			echo -e "\${IPADDR}\\t\${HOSTNAME}" >> /etc/hosts
+		EOF
+	fi
+	${CAT}<<-EOF
+		%end
+
+		%post
+		SOURCE=${SOURCE}
+		ARCH=\$(uname -i)
+		OSVER=${OSVER}
+		VER=\${OSVER##*/}
+	EOF
+}
+
+# param: disk
+# param: swap size
+partition() {
+	local OSVER=${4##*/}
+	if [ ${4%%/*} == "ovs" ]; then
+		local fstype=ext4
+	elif [ ${OSVER%.*} -lt 6 ]; then
+		local fstype=ext3
+	else
+		local fstype=ext4
+		if [ ${OSVER%.*} -gt 6 ]; then
+			local thinlvm="--thin --poolname thinp"
+		fi
+	fi
+	if [ "${1:0:2}" == "sd" ]; then
+		if [ ${4%%/*} != "ovs" ]; then
+			${CAT}<<-EOF
+				part biosboot --fstype=biosboot --size=1 --ondisk=${1:-sda}
+				part /boot --fstype=$fstype --fsoptions="defaults,discard" --size=512 --ondisk=${1:-sda}
+				part pv.100000 --size=1 --grow --ondisk=${1:-sda}
+				volgroup vg_${HOST//-/} --pesize=32768 pv.100000
+				logvol swap --vgname=vg_${HOST//-/} --fstype=swap --name=lv_swap ${2:+"--size="}${2:-"--recommended"}
+				$([ -n "${thinlvm}" ] && ${ECHO} "logvol none --thinpool --vgname=vg_${HOST//-/} --name=thinp --size=1 --grow" || ${ECHO} "#Thick LVM")
+				logvol / --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_root --size=10240
+				logvol /usr --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_usr --size=10240
+				logvol /var --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_var --size=10240
+				logvol /tmp --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_tmp --size=4096
+				logvol /home --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_home --size=10240
+			EOF
+			if [ ${XEN:-0} -eq 1 ]; then
+				${CAT}<<-EOF
+					logvol /xen --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_xen --size=51200
+				EOF
+			else
+				${CAT}<<-EOF
+					logvol /u01 --vg_name=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_u01 --size=1 --grow
+				EOF
+			fi
+		elif [ ${OPSTACK:-0} -eq 1 ]; then
+			${CAT}<<-EOF
+				part biosboot --fstype=biosboot --size=1 --ondisk=${1:-sda}
+				part /boot --fstype=$fstype --size=512 --ondisk=${1:-sda}
+				part / --fstype=$fstype --size=10240 --ondisk=${1:-sda}
+				part swap --size=2048 --ondisk=${1:-sda}
+				part /usr --fstype=$fstype --size=10240 --ondisk=${1:-sda}
+				part /var --fstype=$fstype --size=10240 --ondisk=${1:-sda}
+				part /tmp --fstype=$fstype --size=4096 --ondisk=${1:-sda}
+				part /var/lib --fstype=$fstype --size=153600 --ondisk=${1:-sda}
+			EOF
+			if [ "${HOST}" == "${CONTROLLER:-cas-opstack1}" ]; then
+				${CAT}<<-EOF
+					part /var/lib/glance --fstype=$fstype --size=102400 --ondisk=${1:-sda}
+				EOF
+			fi
+			${CAT}<<-EOF
+				part /srv/node/sdb --fstype=xfs --size=1 --grow --ondisk=${1:-sda}
+			EOF
+		else
+			${CAT}<<-EOF
+				part biosboot --fstype=biosboot --size=1 --ondisk=${1:-sda}
+				part /boot --fstype=$fstype --size=256 --ondisk=${1:-sda}
+				part / --fstype=$fstype --size=4096 --ondisk=${1:-sda}
+				part swap --size=2048 --ondisk=${1:-sda}
+			EOF
+		fi
+	else
+		${CAT}<<-EOF
+			part biosboot --fstype=biosboot --size=1 --ondisk=${1:-sda}
+			part /boot --fstype=$fstype --fsoptions="defaults,discard" --size=512 --ondisk=${1:-sda}
+			part pv.100000 --size=1 --grow --ondisk=${1:-sda}
+			volgroup vg_${HOST//-/} --pesize=32768 pv.100000
+			logvol swap --vgname=vg_${HOST//-/} --fstype=swap --name=lv_swap ${2:+"--size="}${2:-"--recommended"}
+			$([ -n "${thinlvm}" ] && ${ECHO} "logvol none --thinpool --vgname=vg_${HOST//-/} --name=thinp --size=1 --grow" || ${ECHO} "#Thick LVM")
+			logvol / --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_root --size=1024
+			logvol /usr --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_usr --size=5120
+			logvol /var --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_var --size=3072
+			logvol /tmp --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_tmp --size=4096
+			logvol /home --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_home --size=1024
+			logvol /u01 --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_u01 --size=1 --grow
+		EOF
+	fi
+	#${CAT}<<-EOF
+		#logvol /dfs/jn --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_jn --size=10240
+		#logvol /usr/local --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_usrlocal --size=2048
+	#EOF
+}
+
+# Add bonding module
+# parameters: bond interface index
+bonding() {
+	${CAT}<<-BONDINGEOF
+		cat<<-EOF>>/etc/modprobe.d/bonding.conf
+		alias bond${1:-0} bonding
+		options bond${1:-0} mode=3 miimon=250 updelay=500 downdelay=500
+		EOF
+	BONDINGEOF
+}
+
+# parameters:
+# hostname
+# gateway
+network() {
+	${CAT}<<-NETEOF
+		cat<<-EOF>/etc/sysconfig/network
+		NETWORKING=yes
+		HOSTNAME=${1:-localhost}
+		GATEWAY=${2}
+		EOF
+	NETEOF
+}
+
+# parameters:
+# device (default: eth0)
+# ip addr
+# separator IP/mask or IP MASK where separator is / or " "
+# mask
+# Type
+ifcfg_interface() {
+	${ECHO} "unset HWADDR"
+	${ECHO} "if [ -f /etc/sysconfig/network-scripts/ifcfg-${1:-eth0} ]; then"
+	${ECHO} "${TAB}	. /etc/sysconfig/network-scripts/ifcfg-${1:-eth0}"
+	${ECHO} "fi"
+	${ECHO} "cat<<-EOF>/etc/sysconfig/network-scripts/ifcfg-${1:-eth0}"
+	${ECHO} "DEVICE=${1:-eth0}"
+	if [ -n "${5}" ]; then
+		${ECHO} "TYPE=${5}"
+	fi
+	if [ ${1%%[0-9]} == "eth" ]; then
+		if [ "${DISK:0:2}" == "sd" ]; then
+			${ECHO} "HWADDR=\${HWADDR}"
+		fi
+	fi
+	${ECHO} "BOOTPROTO=static"
+	${ECHO} "IPADDR=${2}"
+	${IPCALC} -s -b -m -n ${2}${3:-" "}${4}
+	${ECHO} "ONBOOT=yes"
+	${ECHO} "NM_CONTROLLED=no"
+	${ECHO} "EOF"
+}
+
+# parameters
+# slave (default: eth0)
+# bond (default: bond0)
+ifenslave_interface() {
+	${CAT}<<-IFEOF
+		unset HWADDR
+		if [ -f /etc/sysconfig/network-scripts/ifcfg-${1:-eth0} ]; then
+		${TAB}	. /etc/sysconfig/network-scripts/ifcfg-${1:-eth0}
+		fi
+		cat<<-EOF>/etc/sysconfig/network-scripts/ifcfg-${1:-eth0}
+		DEVICE=${1:-eth0}
+		USERCTL=no
+		MASTER=${2:-bond0}
+		SLAVE=yes
+		BOOTPROTO=none
+		ONBOOT=yes
+		NM_CONTROLLED=no
+	IFEOF
+	if [ "${DISK:0:2}" == "sd" ]; then
+		${ECHO} "HWADDR=\${HWADDR}"
+	fi
+	${ECHO} EOF
+}
+
+# parameters
+# interface (default: eth0)
+# bridge (default: xenbr0)
+bridgeAddInterface() {
+	${CAT}<<-IFEOF
+		unset HWADDR
+		if [ -f /etc/sysconfig/network-scripts/ifcfg-${1:-eth0} ]; then
+		${TAB}	. /etc/sysconfig/network-scripts/ifcfg-${1:-eth0}
+		fi
+		cat<<-EOF>/etc/sysconfig/network-scripts/ifcfg-${1:-eth0}
+		DEVICE=${1:-eth0}
+		USERCTL=no
+		BRIDGE=${2:-xenbr0}
+		BOOTPROTO=none
+		ONBOOT=yes
+		NM_CONTROLLED=no
+	IFEOF
+	if [ "${DISK:0:2}" == "sd" ]; then
+		${ECHO} "HWADDR=\${HWADDR}"
+	fi
+	${ECHO} EOF
+}
+
+# zerombr
+# parameter:
+# version e.g. rhel/5.3 4.7
+zerombr() {
+if [ ${1##*/} -lt 6 ]; then
+	echo zerombr yes
+else
+	echo zerombr
+fi
+}
+
+# KeyOrLangSupport
+# parameters:
+# version e.g. rhel/5.3 4.7
+# key (default: --skip) or language support (default: en_SG.UTF-8 en_US.UTF-8 en_SG.UTF-8)
+KeyOrLangSupport () {
+VERSION=${1##*/}
+MAJ=${VERSION%%.*}
+if [ ${MAJ} -lt 5 ]; then
+	KEYWORD=langsupport
+	VALUE=${2:-"--default=en_SG.UTF-8 en_US.UTF-8 en_SG.UTF-8"}
+else
+	KEYWORD=key
+	VALUE=${2:-"--skip"}
+fi
+if [ ${MAJ} -lt 7 ]; then
+	${ECHO} ${KEYWORD} ${VALUE}
+fi
+}
+
+updateSysctl() {
+	${ECHO} %include ${SOURCE}/include/sysctl.ks
+}
+
+# parameters:
+# domain
+# search
+# nameserver
+updateResolv() {
+	${CAT}<<-EOF
+		echo domain ${1} > /etc/resolv.conf
+		echo search ${2:-"${1}"} >> /etc/resolv.conf
+	EOF
+	shift;shift
+	while [ $# -gt 0 -a -n "${1}" ]
+	do
+		${CAT}<<-EOF
+			echo nameserver ${1} >> /etc/resolv.conf
+		EOF
+		shift
+	done
+}
+
+# parameter: ntp servers
+updateNtp() {
+	${CAT}<<-EOF
+		sed -i 's/^server/# server/g;s/^fudge/# fudge/g' /etc/ntp.conf
+	EOF
+	while [ $# -gt 0 -a -n "${1}" ]
+	do
+		${CAT}<<-EOF
+			echo "restrict ${1} nomodify notrap # choke router restrict" >> /etc/ntp.conf
+			echo "server   ${1}                 # choke router restrict" >> /etc/ntp.conf
+		EOF
+		shift
+	done
+}
+
+# parameters:
+# authorized_keys source
+# username where keys will be registered
+addAUTHkeys() {
+if [ -f /usr/local/Downloads/include/ssh-keys/${1##*/} ]; then
+	${CAT}<<-EOF
+		mkdir --mode=0700 \$(getent passwd ${2:-root} | cut -d: -f6)/.ssh
+		cat<<-authEOF > \$(getent passwd ${2:-root} | cut -d: -f6)/.ssh/authorized_keys
+			%include ${SOURCE}/include/ssh-keys/${1##*/}
+		authEOF
+		chmod 0644 \$(getent passwd ${2:-root} | cut -d: -f6)/.ssh/authorized_keys
+		chown -R ${2:-root}:\$(id -gn ${2:-root}) \$(getent passwd ${2:-root} | cut -d: -f6)/.ssh
+	EOF
+fi
+}
+
+# parameters none
+addSSSD() {
+	${CAT}<<-EOF
+		${CAT}<<-sssdEOF > /etc/sssd/sssd.conf
+			%include ${SOURCE}/include/certs/sssd.conf
+		sssdEOF
+		chmod 0600 /etc/sssd/sssd.conf
+		mkdir -p /etc/openldap/cacerts
+	EOF
+	for eachPEM in /usr/local/Downloads/include/certs/*.pem; do
+		${CAT}<<-forEACH
+			cat<<-pemEOF > /etc/openldap/cacerts/${eachPEM##*/}
+				%include ${SOURCE}/include/certs/${eachPEM##*/}
+			pemEOF
+		forEACH
+	done
+	${CAT}<<-EOF
+		pushd /etc/openldap/cacerts
+		for eachPEM in *.pem; do
+			${TAB}	ln -s \${eachPEM} \$(openssl x509 -hash -noout -in \${eachPEM}).0
+		done
+		popd
+	EOF
+}
+
+# parameters none
+addXENkparams() {
+	if [ ${XEN:-0} -eq 1 ]; then
+		${CAT}<<-EOF
+			if rpm -q xen-hypervisor 2>/dev/null; then
+				${TAB}	xenkparams=\$(mktemp /tmp/XXXXXXXXX)
+				${TAB}	rpm -q --scripts xen-hypervisor | sed -n '/postinstall/,/postuninstall/{/^post.*install.*$/d;p}' > \$xenkparams
+				${TAB}	bash \$xenkparams 1
+				${TAB}	rm -f \$xenkparams
+			fi
+		EOF
+	fi
+}
+
+# parameters:
+# label
+# tftpboot default file
+pxeBootCleanup() {
+	${SED} -i "/label ${1}/,+3 d" ${TFTPBOOTDIR}/default
+}
+
+# parameters:
+# nodename
+# OSversion
+# ARCH (default: x86_64)
+# KS
+# method
+# ksdevice
+# IP (default: dhcp)
+# mask
+# gw
+# install mode (default gui)
+pxeBoot() {
+	local OSVER=${2##*/}
+	INDENT='  '
+	if [ ${OSVER%.*} -gt 6 ]; then
+		INST='inst.'
+	fi
+	if [ ${2%%/*} != "ovs" ]; then
+		${CAT}<<-EOF
+			label ${1}
+			${INDENT}kernel /os/${2%%/*}/${2##*/}/${3:-x86_64}/isolinux/vmlinuz
+			${INDENT}append initrd=/os/${2%%/*}/${2##*/}/${3:-x86_64}/isolinux/initrd.img ${10} ramdisk_size=8192 ${INST}ks=${4} $(repoMethod ${2##*/} ${5}) ${6:+"ksdevice=${6}"} ip=${7:-dhcp} ${8:+"netmask=${8}"} ${9:+"gateway=${9}"} ${11:+"dns=${11}"} hostname=${1} sshd=1
+
+		EOF
+	else
+		${CAT}<<-EOF
+			label ${1}
+			${INDENT}kernel /os/${2%%/*}/${2##*/}/${3:-x86_64}/isolinux/mboot.c32
+			${INDENT}append /os/${2%%/*}/${2##*/}/${3:-x86_64}/isolinux/xen.gz dom0_mem=max:128G dom0_max_vcpus=20 --- /os/${2%%/*}/${2##*/}/${3:-x86_64}/isolinux/vmlinuz ramdisk_size=8192  ${INST}ks=${4} method=${5} ${6:+"ksdevice=${6}"} ip=${7:-dhcp} ${8:+"netmask=${8}"} ${9:+"gateway=${9}"} ${11:+"dns=${11}"} hostname=${1} sshd=1 --- /os/${2%%/*}/${2##*/}/${3:-x86_64}/isolinux/initrd.img
+
+		EOF
+	fi
+}
+
+# parameters:
+# nodename
+# OSversion
+# ARCH (default: x86_64)
+# KS
+# method
+# ksdevice
+# IP (default: dhcp)
+# mask
+# gw
+# install mode (default gui)
+efiBoot() {
+	local OSVER=${2##*/}
+	INDENT='	'
+	if [ ${OSVER%.*} -gt 6 ]; then
+		INST='inst.'
+	fi
+	${CAT}<<-EOF
+		default=0
+		timeout=1
+		hiddenmenu
+		title ${1}
+		${INDENT}root (nd)
+		${INDENT}kernel /os/${2%%/*}/${2##*/}/${3:-x86_64}/isolinux/vmlinuz ${10} ramdisk_size=8192 ${INST}ks=${4} method=${5} ${6:+"ksdevice=${6}"} ip=${7:-dhcp} ${8:+"netmask=${8}"} ${9:+"gateway=${9}"} ${11:+"dns=${11}"} sshd=1
+		${INDENT}initrd /os/${2%%/*}/${2##*/}/${3:-x86_64}/isolinux/initrd.img
+
+	EOF
+}
+
+limits() {
+	${CAT}<<-EOF
+		if [ -d /etc/security/limits.d ]; then
+		${TAB}	echo '* soft    nofile  65535' >> /etc/security/limits.d/01-nofile.conf
+		${TAB}	echo '* hard    nofile  65535' >> /etc/security/limits.d/01-nofile.conf
+		else
+		${TAB}	echo '* soft    nofile  65535' >> /etc/security/limits.conf
+		${TAB}	echo '* hard    nofile  65535' >> /etc/security/limits.conf
+		fi
+	EOF
+}
+
+# parameters:
+# group name
+# group id
+createGroup() {
+	${CAT}<<-EOF
+	groupadd -g ${2} ${1} 2>/dev/null
+	EOF
+}
+
+# parameters:
+# username
+# user id
+# group name
+# group id
+# passwd
+createUser() {
+	createGroup $3 $4
+	${CAT}<<-EOF
+		useradd -u ${2} -g ${3} -s /bin/bash ${1} 2>/dev/null
+	EOF
+	if [ $# -gt 4 ]; then
+		${CAT}<<-EOF
+			echo $5 | passwd $1 --stdin
+		EOF
+	else
+		${CAT}<<-EOF
+			passwd -l $1
+		EOF
+	fi
+}
+
+#parameters:
+# username
+sudoer() {
+	${CAT}<<-EOF
+	if [ -d /etc/sudoers.d ]; then
+	${TAB}	echo -e "${1}\tALL=(ALL)\tNOPASSWD:\tALL" > /etc/sudoers.d/${1}
+	else
+	${TAB}	echo -e "${1}\tALL=(ALL)\tNOPASSWD:\tALL" >> /etc/sudoers
+	fi
+	EOF
+}
+
+# parameters
+# OS version
+# repo name and baseurl joined by "=" e.g. reponame=urlname
+# multiple instances of name url pair
+repo() {
+	while [ $# -gt 0 ]
+	do
+		${ECHO} ${1} | ${SED} 's/\(.*\)=\(.*\)/repo --name=\1 --baseurl=\2/g'
+		shift
+	done
+}
+
+# parameters
+# OS version
+# repository URL
+repoMethod() {
+	if [ ${1%%.*} -lt 7 ]; then
+		${ECHO} method=${2}
+	else
+		${ECHO} inst.stage2=${2} inst.repo=${2}
+	fi
+}
+
+# parameters
+# network param for ks installation
+ksnetwork() {
+	${ECHO} network ${@} --hostname ${HOST} --nameserver 10.209.76.198
+}
+
+# blacklist kernel module.
+# parameters: module
+blacklist() {
+	${ECHO} "echo blacklist ${1} > /etc/modprobe.d/blacklist-${1}"
+}

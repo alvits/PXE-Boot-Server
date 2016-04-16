@@ -1,0 +1,30 @@
+<comps>
+	<group>
+		<id>xen</id>
+		<name>Xen</name>
+		<description>Xen Virtualization Support for OracleLinux</description>
+		<default>false</default>
+		<uservisible>true</uservisible>
+		<packagelist>
+			<packagereq type="default">xen-runtime</packagereq>
+			<packagereq type="default">xen-hypervisor</packagereq>
+			<packagereq type="default">xen-libs</packagereq>
+			<packagereq type="default">xen-license</packagereq>
+			<packagereq type="optional">xen</packagereq>
+			<packagereq type="optional">xen-ocaml</packagereq>
+			<packagereq type="optional">xen-debuginfo</packagereq>
+			<packagereq type="optional">xen-doc</packagereq>
+		</packagelist>
+	</group>
+	<group>
+		<id>xen-devel</id>
+		<name>Xen Development</name>
+		<description>Xen Development Package for OracleLinux</description>
+		<default>false</default>
+		<uservisible>true</uservisible>
+		<packagelist>
+			<packagereq type="default">xen-devel</packagereq>
+			<packagereq type="optional">xen-ocaml-devel</packagereq>
+		</packagelist>
+	</group>
+</comps>

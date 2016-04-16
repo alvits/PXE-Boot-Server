@@ -1,0 +1,1 @@
+authconfig --enableshadow --enablemd5 --enablesssd --enablesssdauth --enablelocauthorize --enablemkhomedir --disablenis --disableldap --disableldapauth --disablefingerprint --disablesmartcard --disablerequiresmartcard

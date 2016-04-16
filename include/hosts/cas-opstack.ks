@@ -1,0 +1,12 @@
+10.132.60.141	cas-opstack1
+10.196.0.11	cas-opstack1-internal
+10.132.60.142	cas-opstack2
+10.196.0.12	cas-opstack2-internal
+10.132.60.143	cas-opstack3
+10.196.0.13	cas-opstack3-internal
+10.132.60.144	cas-opstack4
+10.196.0.14	cas-opstack4-internal
+10.132.60.145	cas-opstack5
+10.196.0.15	cas-opstack5-internal
+10.132.60.146	cas-opstack6
+10.196.0.16	cas-opstack6-internal

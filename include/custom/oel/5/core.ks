@@ -1,0 +1,9 @@
+@system-tools
+@admin-tools
+@text-internet
+@server-cfg
+kernel-uek
+-kernel
+-up2date
+-anaconda-runtime
+-rhnsd
