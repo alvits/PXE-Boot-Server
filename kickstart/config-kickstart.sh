@@ -154,8 +154,8 @@ fi
 
 if (ping -q -c 2 uln-internal.oracle.com > /dev/null 2>&1); then
 	if [ ${OPSTACK:-0} -eq 1 ]; then
-		latestkernelUEKR3="ol6_UEKR3=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL6/UEKR3/latest/x86_64/"
-		latestRepositories="ol6_latest=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL6/latest/x86_64/ ASV_base=${SOURCE}/asv/6/base/ $latestkernelUEKR3"
+		latestkernelUEKR3="ol6_UEKR3=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL6/UEKR3/latest/${ARCH}/"
+		latestRepositories="ol6_latest=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL6/latest/${ARCH}/ ASV_base=${SOURCE}/asv/6/base/ $latestkernelUEKR3"
 	else
 		case ${OSVER##*/} in
 			7)
@@ -168,7 +168,7 @@ if (ping -q -c 2 uln-internal.oracle.com > /dev/null 2>&1); then
 				UEK="UEK/latest"
 				;;
 		esac
-		latestRepositories="ol${OSVER#*/}_${UEK}=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL${OSVER#*/}/${UEK}/x86_64/ ol${OSVER#*/}_latest=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL${OSVER#*/}/latest/x86_64/ ASV_latest=${SOURCE}/asv/${OSVER#*/}/latest/"
+		latestRepositories="ol${OSVER#*/}_${UEK}=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL${OSVER#*/}/${UEK}/${ARCH}/ ol${OSVER#*/}_latest=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL${OSVER#*/}/latest/${ARCH}/ ASV_latest=${SOURCE}/asv/${OSVER#*/}/latest/"
 	fi
 fi
 
@@ -178,7 +178,7 @@ if [ "${DISK:0:2}" != "sd" ]; then
 fi
 
 if [ ${OPSTACK:-0} -eq 1 ]; then
-	Repositories="OpenStack=${SOURCE}/OpenStack/6 $latestRepositories"
+	Repositories="ol7_openstack20=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL${OSVER#*/}/openstack20/${ARCH}/ $latestRepositories"
 elif [ ${OSVERSION%%/*} == "ovs" ]; then
 	unset Repositories
 else
