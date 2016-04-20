@@ -54,6 +54,7 @@ texlive-ntgclass
 texlive-times
 transfig
 udev
+valgrind
 wget
 xz-devel
 yajl-devel
