@@ -344,6 +344,7 @@ addAUTHkeys ${SSHKEYS} root >> ${KS}
 if [ ${OPSTACK:-0} -eq 1 ]; then
 	customizeOpenStack >> ${KS}
 fi
+autoextendTHINpool >> ${KS}
 ${MKDIR} ${KICKSTART}/${HOST} 2> /dev/null
 echo "%end" >> ${KS}
 ${MV} --backup=numbered ${KS} ${KICKSTART}/${HOST}/ks.cfg
