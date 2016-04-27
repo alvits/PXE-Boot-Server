@@ -1,3 +1,5 @@
+autoconf
+automake
 bison
 bzip2-devel
 checkpolicy
@@ -36,6 +38,7 @@ pciutils-devel
 perl-Pod-*
 perl-Text-*
 python-devel
+readline-devel
 redhat-rpm-config
 rpm-build
 rpm-sign
