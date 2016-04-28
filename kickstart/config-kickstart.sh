@@ -190,7 +190,7 @@ fi
 
 unset latestRepositories
 
-initialize ${DISK} "${SWAP}" ${SOURCE} ${OSVERSION} ${ARCH} '' '' "${ROOTPW:-\$1\$/D0WZ/Qx\$hiV59A2D7YIq/Th3OqZM/1}" '' '' "${Repositories}" > ${KS}
+initialize ${DISK} "${SWAP}" ${SOURCE} ${OSVERSION} ${ARCH} '' '' "${ROOTPW:-\$1\$/D0WZ/Qx\$hiV59A2D7YIq/Th3OqZM/1}" '' "${Repositories}" > ${KS}
 
 ${PRINTF} "This script will generate a kickstart configuration file named ks.cfg\n\n"
 

@@ -105,12 +105,12 @@ get_IP() {
 # key (default: --skip) or language support (default: en_SG.UTF-8 en_US.UTF-8 en_SG.UTF-8)
 # root password
 # network
-# function name to run for partition information (default: partition)
 # additional repository
 initialize() {
 	local OSVER=${4:-"${OSVERSION}"}
 	local ARCH=${5:-"${ARCH}"}
 	local SOURCE=${3:-"${SOURCE}"}
+	local DISK=${1:-sda}
 	if [ ${OSVER%%/*} == "ovs" ]; then
 		${CAT}<<-EOF
 			eula Accepted
@@ -122,7 +122,7 @@ initialize() {
 				bootloader --location=mbr --dom0_mem="3072M dom0_max_vcpus=4 dom0_vcpus_pin=true extra_guest_irqs=64,1024" --driveorder=${1:-sda}
 			EOF
 			ksnetwork --onboot yes --device ${privateETH:-eth2} --bootproto static --ip ${privateIP} --netmask $(ipcalc -m $privateIP/$privatePREFIX|sed 's/NETMASK=//g') --gateway ${GATEWAY} ${9} --noipv6
-			repo ${11}
+			repo ${10}
 		else
 			${CAT}<<-EOF
 				bootloader --location=mbr --dom0_mem="2048M dom0_max_vcpus=4 dom0_vcpus_pin=true extra_guest_irqs=64,1024" --driveorder=${1:-sda}
@@ -134,7 +134,7 @@ initialize() {
 			bootloader --location=mbr --driveorder=${1:-sda} --append="quiet"
 		EOF
 		ksnetwork --onboot yes --device ${INTFACE:-eth0} --bootproto static --ip ${IPADDR} --netmask $(ipcalc -m ${IPADDR}${SLASH}${NETMASK}|sed 's/NETMASK=//g') --gateway ${GATEWAY} ${9} --noipv6
-		repo ${11}
+		repo ${10}
 	fi
 	${CAT}<<-EOF
 		%include ${SOURCE}/include/custom/${OSVER%%/*}/authconfig.${OPSTACK:-0}.ks
@@ -147,16 +147,10 @@ initialize() {
 		rootpw --iscrypted ${8:-"\$1\$/D0WZ/Qx\$hiV59A2D7YIq/Th3OqZM/1"}
 		sshpw --username=alvits "\$1\$uhUskY/C\$WvZ.5zv54L0Txbacam9iC0" --iscrypted
 		timezone --utc America/Los_Angeles
-		#$(zerombr ${OSVER%.*})
 		reboot --eject
-		# The following is the partition information you requested
-		# Note that any partitions you deleted are not expressed
-		# here so unless you clear all partitions first, this is
-		# not guaranteed to work
-		#clearpart --all --drives=${1:-sda} --disklabel=gpt
-	EOF
-	${10:-partition} "$@"
-	${CAT}<<-EOF
+
+		%include /tmp/diskpart.ks
+
 		%packages --ignoremissing --excludedocs
 		%include ${SOURCE}/include/custom/${OSVER%%.*}/core.ks
 		%include ${SOURCE}/include/custom/${OSVER%%/*}/addons.ks
@@ -187,13 +181,41 @@ initialize() {
 			fi
 		fi
 	fi
+	if [ ${XEN:-0} -eq 1 ]; then
+		datadisk=xen
+	else
+		datadisk=u01
+	fi
 	${CAT}<<-EOF
 		%end
 
 		%pre
 		lvm vgremove -f \$(lvm vgs --noheadings -o vg_name 2>/dev/null) 2>/dev/null
 		parted -a optimal -s /dev/${1:-sda} mklabel gpt 2>/dev/null
+		DISK=$DISK
+		datadisk=$datadisk
+		vgname=vg_${HOST//-/}
 	EOF
+	if [ ${OPSTACK:-0} -eq 1 ]; then
+		${CAT}<<-EOF
+			cat<<-DISKPART > /tmp/diskpart.ks
+				%include ${SOURCE}/include/custom/opstack/diskpart.ks
+			DISKPART
+		EOF
+		if [ "${HOST}" == "${CONTROLLER:-cas-opstack1}" ]; then
+			${CAT}<<-EOF
+				cat<<-DISKPART >> /tmp/diskpart.ks
+					%include ${SOURCE}/include/custom/opstack/glance.diskpart.ks
+				DISKPART
+			EOF
+		fi
+	else
+		${CAT}<<-EOF
+			cat<<-DISKPART > /tmp/diskpart.ks
+				%include ${SOURCE}/include/custom/${OSVER%%.*}/${DISK:-sda}.diskpart.ks
+			DISKPART
+		EOF
+	fi
 	if [ ${OSVER%/*} != "oel" ]; then
 		${CAT}<<-EOF
 			chmod +w /etc/hosts
@@ -211,93 +233,6 @@ initialize() {
 		OSVER=${OSVER}
 		VER=\${OSVER##*/}
 	EOF
-}
-
-# param: disk
-# param: swap size
-partition() {
-	local OSVER=${4##*/}
-	if [ ${4%%/*} == "ovs" ]; then
-		local fstype=ext4
-	elif [ ${OSVER%.*} -lt 6 ]; then
-		local fstype=ext3
-	else
-		local fstype=ext4
-		if [ ${OSVER%.*} -gt 6 ]; then
-			local thinlvm="--thin --poolname thinp"
-		fi
-	fi
-	if [ "${1:0:2}" == "sd" ]; then
-		if [ ${4%%/*} != "ovs" ]; then
-			${CAT}<<-EOF
-				part biosboot --fstype=biosboot --size=1 --ondisk=${1:-sda}
-				part /boot --fstype=$fstype --fsoptions="defaults,discard" --size=512 --ondisk=${1:-sda}
-				part pv.100000 --size=1 --grow --ondisk=${1:-sda}
-				volgroup vg_${HOST//-/} --pesize=32768 pv.100000
-				logvol swap --vgname=vg_${HOST//-/} --fstype=swap --name=lv_swap ${2:+"--size="}${2:-"--recommended"}
-				$([ -n "${thinlvm}" ] && ${ECHO} "logvol none --thinpool --vgname=vg_${HOST//-/} --name=thinp --size=1 --grow" || ${ECHO} "#Thick LVM")
-				logvol / --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_root --size=10240
-				logvol /usr --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_usr --size=10240
-				logvol /var --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_var --size=10240
-				logvol /tmp --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_tmp --size=4096
-				logvol /home --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_home --size=10240
-			EOF
-			if [ ${XEN:-0} -eq 1 ]; then
-				${CAT}<<-EOF
-					logvol /xen --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_xen --size=51200
-				EOF
-			else
-				${CAT}<<-EOF
-					logvol /u01 --vg_name=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_u01 --size=1 --grow
-				EOF
-			fi
-		elif [ ${OPSTACK:-0} -eq 1 ]; then
-			${CAT}<<-EOF
-				part biosboot --fstype=biosboot --size=1 --ondisk=${1:-sda}
-				part /boot --fstype=$fstype --size=512 --ondisk=${1:-sda}
-				part / --fstype=$fstype --size=10240 --ondisk=${1:-sda}
-				part swap --size=2048 --ondisk=${1:-sda}
-				part /usr --fstype=$fstype --size=10240 --ondisk=${1:-sda}
-				part /var --fstype=$fstype --size=10240 --ondisk=${1:-sda}
-				part /tmp --fstype=$fstype --size=4096 --ondisk=${1:-sda}
-				part /var/lib --fstype=$fstype --size=153600 --ondisk=${1:-sda}
-			EOF
-			if [ "${HOST}" == "${CONTROLLER:-cas-opstack1}" ]; then
-				${CAT}<<-EOF
-					part /var/lib/glance --fstype=$fstype --size=102400 --ondisk=${1:-sda}
-				EOF
-			fi
-			${CAT}<<-EOF
-				part /srv/node/sdb --fstype=xfs --size=1 --grow --ondisk=${1:-sda}
-			EOF
-		else
-			${CAT}<<-EOF
-				part biosboot --fstype=biosboot --size=1 --ondisk=${1:-sda}
-				part /boot --fstype=$fstype --size=256 --ondisk=${1:-sda}
-				part / --fstype=$fstype --size=4096 --ondisk=${1:-sda}
-				part swap --size=2048 --ondisk=${1:-sda}
-			EOF
-		fi
-	else
-		${CAT}<<-EOF
-			part biosboot --fstype=biosboot --size=1 --ondisk=${1:-sda}
-			part /boot --fstype=$fstype --fsoptions="defaults,discard" --size=512 --ondisk=${1:-sda}
-			part pv.100000 --size=1 --grow --ondisk=${1:-sda}
-			volgroup vg_${HOST//-/} --pesize=32768 pv.100000
-			logvol swap --vgname=vg_${HOST//-/} --fstype=swap --name=lv_swap ${2:+"--size="}${2:-"--recommended"}
-			$([ -n "${thinlvm}" ] && ${ECHO} "logvol none --thinpool --vgname=vg_${HOST//-/} --name=thinp --size=1 --grow" || ${ECHO} "#Thick LVM")
-			logvol / --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_root --size=1024
-			logvol /usr --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_usr --size=5120
-			logvol /var --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_var --size=3072
-			logvol /tmp --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_tmp --size=4096
-			logvol /home --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_home --size=1024
-			logvol /u01 --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_u01 --size=1 --grow
-		EOF
-	fi
-	#${CAT}<<-EOF
-		#logvol /dfs/jn --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_jn --size=10240
-		#logvol /usr/local --vgname=vg_${HOST//-/} ${thinlvm} --fstype=$fstype --fsoptions="defaults,discard" --name=lv_usrlocal --size=2048
-	#EOF
 }
 
 # Add bonding module
