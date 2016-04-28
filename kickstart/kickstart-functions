@@ -194,7 +194,7 @@ initialize() {
 		parted -a optimal -s /dev/${1:-sda} mklabel gpt 2>/dev/null
 		DISK=$DISK
 		datadisk=$datadisk
-		vgname=vg_${HOST//-/}
+		vgname=vg_${HOST//-/_}
 	EOF
 	if [ ${OPSTACK:-0} -eq 1 ]; then
 		${CAT}<<-EOF
