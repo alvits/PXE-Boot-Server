@@ -13,6 +13,7 @@ return > /dev/null 2>&1
 # -i ip
 # -n hostname
 # -g gateway
+# -G group
 # -q quiet. don't ask for private net
 # -m netmask
 # -b bonded
@@ -20,9 +21,11 @@ return > /dev/null 2>&1
 # -k kernel devel
 # -c redhat cluster suite
 # -u unbound interface
+# -U username
 # -o openstack install (mutually exclusive with xen)
 # -p ip/prefix private ip address with prefix
 # -P root password
+# -r commands
 
 usage() {
 ${CAT}<<-EOF
@@ -36,15 +39,18 @@ ${CAT}<<-EOF
 	 	-i ip address - is the IP assigned to host
 	 	-n hostname - is the assigned hostname
 	 	-g gateway - is the default route of the host
+	 	-G groupname - create groupname. default is dba
 	 	-q - quiet. don't ask for private network
 	 	-m netmask - is the assigned netmask
 	 	-b - the network interface is bonded. mutually exclusive with -u
 	 	-x - install xen. mutually exclusive with -o
 	 	-k - install kernel-uek-devel package
 	 	-u - unbound interface. mutually exclusive with -b
+	 	-U username - create username. Default is oracle
 	 	-o - install and configure openstack node. mutually exclusive with -x
 	 	-p ip/prefix - private ip address in prefix notation
 	 	-P root password - root password. If password is in cleartext, script will encrypt
+	 	-r username::commands - run commands as username. otherwise run as specified in -U
 EOF
 exit
 }
@@ -56,8 +62,10 @@ DISK=sda
 OSVERSION=oel/6.6
 ARCH=x86_64
 INTFACE=eth0
+username=oracle
+groupname=dba
 
-while getopts ":d:v:a:s:I:S:e:i:n:g:xqm:p:P:kbuho" OPT
+while getopts ":d:v:a:s:I:S:e:i:n:g:G:xqm:p:P:U:r:kbuho" OPT
 do
 	case ${OPT} in
 	d)
@@ -95,6 +103,9 @@ do
 	g)
 		GATEWAY=${OPTARG}
 		;;
+	G)
+		groupname=${OPTARG}
+		;;
 	q)
 		QUIET=1
 		;;
@@ -114,6 +125,9 @@ do
 		;;
 	u)
 		BONDED=1
+		;;
+	U)
+		username=${OPTARG}
 		;;
 	x)
 		XEN=1
@@ -139,11 +153,21 @@ do
 			ROOTPW=$(openssl passwd -1 "$OPTARG")
 		fi
 		;;
+	r)
+		commands="${OPTARG#*::}"
+		runAsUser=${OPTARG%%::*}
+		;;
 	*)
 		usage
 		;;
 	esac
 done
+
+if [ -n "${commands}" ]; then
+	if [ "${commands}" == "${runAsUser}" ]; then
+		runAsUser=${username}
+	fi
+fi
 
 OSVER=${OSVERSION%.*}
 if [ ${OSVER##*/} -gt 5 ]; then
@@ -190,8 +214,6 @@ fi
 
 unset latestRepositories
 
-initialize ${DISK} "${SWAP}" ${SOURCE} ${OSVERSION} ${ARCH} '' '' "${ROOTPW:-\$1\$/D0WZ/Qx\$hiV59A2D7YIq/Th3OqZM/1}" '' "${Repositories}" > ${KS}
-
 ${PRINTF} "This script will generate a kickstart configuration file named ks.cfg\n\n"
 
 while [ -z "$HOST" ]; do
@@ -230,6 +252,8 @@ if [ -z "$GATEWAY" ]; then
 	set $(get_IP "What is the default gateway?" "Invalid gateway")
 	GATEWAY=${1%%/*}
 fi
+
+initialize ${DISK} "${SWAP}" ${SOURCE} ${OSVERSION} ${ARCH} '' '' "${ROOTPW:-\$1\$/D0WZ/Qx\$hiV59A2D7YIq/Th3OqZM/1}" '' "${Repositories}" > ${KS}
 
 network ${HOST} ${GATEWAY} >> ${KS}
 
@@ -331,12 +355,9 @@ updateNtp 10.132.10.137 10.132.9.97 ${GATEWAY} >> ${KS}
 updateResolv us.oracle.com us.oracle.com 10.209.76.198 10.209.76.197 192.135.82.132 >> ${KS}
 if [ ${OSVERSION%%/*} != "ovs" ]; then
 	limits >> ${KS}
-	#createUser hadooproot 5500 users 100 >> ${KS}
-	createUser oracle 1000 dba 1000 >> ${KS}
-	#sudoer hadooproot >> ${KS}
-	sudoer oracle >> ${KS}
-	addAUTHkeys ${SSHKEYS} oracle >> ${KS}
-	#addAUTHkeys ${SSHKEYS} hadooproot >> ${KS}
+	createUser ${username} 1000 ${groupname} 1000 >> ${KS}
+	sudoer ${username} >> ${KS}
+	addAUTHkeys ${SSHKEYS} ${username} >> ${KS}
 	addSSSD >> ${KS}
 	addXENkparams >> ${KS}
 fi
@@ -345,6 +366,9 @@ if [ ${OPSTACK:-0} -eq 1 ]; then
 	customizeOpenStack >> ${KS}
 fi
 autoextendTHINpool >> ${KS}
+if [ -n "${commands}" ]; then
+	runAS ${runAsUser} "${commands}" >> ${KS}
+fi
 ${MKDIR} ${KICKSTART}/${HOST} 2> /dev/null
 echo "%end" >> ${KS}
 ${MV} --backup=numbered ${KS} ${KICKSTART}/${HOST}/ks.cfg

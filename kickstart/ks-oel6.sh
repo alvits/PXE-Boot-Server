@@ -6,7 +6,7 @@ params="$@"
 while read line; do
 	if [ ${line:0:1} != "#" ]; then
 		if [ "$line" != "${line/=/}" ]; then
-			export $line
+			declare ${line%%=*}="${line#*=}"
 			if [ -n "${HOSTSFILE}" ]; then
 				HOSTSFILE=${HOSTSFILE##*/}
 				> /usr/local/Downloads/include/hosts/${HOSTSFILE##*/}
@@ -40,7 +40,7 @@ while read line; do
 				privIP=${privIP//* -p }
 				echo -e "${privIP//\/*}\t${host}-internal" >> /usr/local/Downloads/include/hosts/${HOSTSFILE##*/}
 			fi
-			config-kickstart.sh -n $host -g ${GATEWAY%%/*} -i $ipaddr -m /${GATEWAY##*/} -d ${disk:-sda} ${mac:+"-e"} ${mac} -q -b $params $@
+			config-kickstart.sh -n $host -g ${GATEWAY%%/*} -i $ipaddr -m /${GATEWAY##*/} -d ${disk:-sda} ${mac:+"-e"} ${mac} -q -b $params $@ ${COMMAND:+-r} "${COMMAND}"
 			if [ -n "${RINGBUILDER##*/}" ]; then
 				(( zonecount++ ))
 				cat<<-EOF >> /usr/local/Downloads/include/swift/${RINGBUILDER##*/}

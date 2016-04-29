@@ -621,3 +621,14 @@ blacklist() {
 autoextendTHINpool() {
 	${ECHO} %include ${SOURCE}/include/autoextendTHINpool.ks
 }
+
+# parameters
+# username
+# commands
+runAS() {
+	local user=$1
+	shift
+	${CAT}<<-EOF
+		runuser -ls /bin/sh ${user} -c "${*}"
+	EOF
+}
