@@ -1,0 +1,78 @@
+NETMASK=23
+SLASH=/
+usage() {
+	cat<<-EOF
+		Usage:	${0##*/} {[-v osversion] [-i hostip] [-m netmask] [-g gateway] | [-h]} hostname
+		where:	-v osversion is one of oel/6.6 ovs/3.3 oel/7.1
+		 	-i hostip is the ip address being assigned to the host
+		 	-m netmask is the netmask being assigned to host
+		 	-g gateway is the default router of the host
+		 	-h help. Prints this usage.
+	EOF
+	exit 1
+}
+
+while [ $# -gt 0 ]
+do
+	while getopts ":v:i:m:g:h" OPT
+	do
+		case ${OPT} in
+		v)
+			if [ ${OPTARG##*/} == ${OPTARG} ]; then
+				OSVERSION=oel/${OPTARG}
+			else
+				OSVERSION=${OPTARG}
+			fi
+			;;
+		i)
+			IPADDR=${OPTARG}
+			;;
+		m)
+			NETMASK=${OPTARG##/}
+			SLASH=${OPTARG:0:1}
+			if [ "$SLASH}" == "${NETMASK:0:1}" ]; then
+				SLASH=' '
+			fi
+			;;
+		g)
+			GATEWAY=${OPTARG}
+			;;
+		h)
+			usage
+			;;
+		\?)
+			echo "Unknown option $OPT"
+			usage
+			;;
+		*)	usage
+			exit
+			;;
+		esac
+	done
+	shift $(( OPTIND - 1 ))
+	if [ $# -gt 0 ]; then
+		HOST=${1}
+		shift
+	fi
+	OPTIND=0
+done
+
+if [ -z "${HOST}" ]; then
+	echo Hostname is required
+	usage
+fi
+
+if [ -z "${IPADDR}" ]; then
+	for IPADDR in 10.132.65.{40..254}; do
+		if ping -c 1 $IPADDR > /dev/null 2>&1; then
+			continue
+		else
+			break
+		fi
+	done
+fi
+
+eval $(ipcalc -n -m -b ${IPADDR}${SLASH:-" "}${NETMASK})
+if [ -z "${GATEWAY}" ]; then
+	GATEWAY=${NETWORK%.*}.$(( ${NETWORK##*.} + 1 ))
+fi
