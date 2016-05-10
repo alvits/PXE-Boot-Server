@@ -2,10 +2,10 @@ NETMASK=23
 SLASH=/
 usage() {
 	cat<<-EOF
-		Usage:	${0##*/} {[-v osversion] [-i hostip] [-m netmask] [-g gateway] | [-h]} hostname
+		Usage:	${0##*/} {[-v osversion] [-i hostip] [-m {netmask|/prefix}] [-g gateway] | [-h]} hostname
 		where:	-v osversion is one of oel/6.6 ovs/3.3 oel/7.1
 		 	-i hostip is the ip address being assigned to the host
-		 	-m netmask is the netmask being assigned to host
+		 	-m netmask/prefix is the netmask or prefix being assigned to host
 		 	-g gateway is the default router of the host
 		 	-h help. Prints this usage.
 	EOF
@@ -26,12 +26,18 @@ do
 			;;
 		i)
 			IPADDR=${OPTARG}
+			if ! ipcalc -c ${IPADDR}/32; then
+				exit 1
+			fi
 			;;
 		m)
 			NETMASK=${OPTARG##/}
 			SLASH=${OPTARG:0:1}
-			if [ "$SLASH}" == "${NETMASK:0:1}" ]; then
+			if [ "${SLASH}" == "${NETMASK:0:1}" ]; then
 				SLASH=' '
+			fi
+			if ! ipcalc -c 0.0.0.0${SLASH}${NETMASK}; then
+				exit 1
 			fi
 			;;
 		g)
@@ -45,7 +51,6 @@ do
 			usage
 			;;
 		*)	usage
-			exit
 			;;
 		esac
 	done
@@ -70,10 +75,6 @@ if [ -z "${IPADDR}" ]; then
 			break
 		fi
 	done
-fi
-
-if ipcalc -c ${IPADDR}${SLASH:-" "}${NETMASK}; then
-	exit 1
 fi
 
 eval $(ipcalc -s -n -m -b ${IPADDR}${SLASH:-" "}${NETMASK})
