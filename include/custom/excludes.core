@@ -24,6 +24,7 @@
 -dhcpv6-client
 -dhcpv6_client
 -dnsmasq
+-dracut-network
 -fbset
 -finger
 -firstboot
@@ -37,6 +38,7 @@
 -iptstate
 -irda-utils
 -jwhois
+-kexec-tools
 -kudzu
 -man
 -man-pages
