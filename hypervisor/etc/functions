@@ -27,7 +27,7 @@ do
 		i)
 			IPADDR=${OPTARG}
 			if ! ipcalc -c ${IPADDR}/32; then
-				exit 1
+				usage
 			fi
 			;;
 		m)
@@ -37,7 +37,7 @@ do
 				SLASH=' '
 			fi
 			if ! ipcalc -c 0.0.0.0${SLASH}${NETMASK}; then
-				exit 1
+				usage
 			fi
 			;;
 		g)

@@ -2,6 +2,11 @@
 
 . /usr/local/etc/functions
 
+if [ -z "${OSVERSION}" ]; then
+	echo OS Version is required.
+	usage
+fi
+
 ks="ks=http://10.132.64.40/os/kickstart/${HOST}/ks.cfg"
 disk="['phy:/dev/vg_tmpsc1/${HOST}-os,xvda,w']"
 repo="method=http://10.132.64.40/os/${OSVERSION}/x86_64/"
