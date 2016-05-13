@@ -163,6 +163,9 @@ initialize() {
 	else
 		${ECHO} "@compat-libraries"
 	fi
+	if [ ${DISK:-sda} != "xvda" ]; then
+		${ECHO} %include ${SOURCE}/include/network/excludes.ks
+	fi
 	${ECHO} %include ${SOURCE}/include/custom/excludes.core
 	if [ ${OPSTACK:-0} -eq 1 ]; then
 		${CAT}<<-EOF

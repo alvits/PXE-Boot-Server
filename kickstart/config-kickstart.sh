@@ -255,7 +255,9 @@ fi
 
 initialize ${DISK} "${SWAP}" ${SOURCE} ${OSVERSION} ${ARCH} '' '' "${ROOTPW:-\$1\$/D0WZ/Qx\$hiV59A2D7YIq/Th3OqZM/1}" '' "${Repositories}" > ${KS}
 
-network ${HOST} ${GATEWAY} >> ${KS}
+if [ ${DISK:-sda} != "xvda" ]; then
+	network ${HOST} ${GATEWAY} >> ${KS}
+fi
 
 if [ ${XEN:-0} -eq 1 ]; then
 	ifcfg_interface xenbr0 ${IPADDR} "${SLASH}" ${NETMASK} Bridge >> ${KS}
@@ -268,9 +270,13 @@ if [ ${XEN:-0} -eq 1 ]; then
 		bridgeAddInterface ${INTFACE:-eth0} xenbr0 >> ${KS}
 	fi
 elif [ ${OPSTACK:-0} -eq 1 ]; then
-	ifcfg_interface ${INTFACE:-eth0} ${IPADDR} "${SLASH}" ${NETMASK} >> ${KS}
+	if [ ${DISK:-sda} != "xvda" ]; then
+		ifcfg_interface ${INTFACE:-eth0} ${IPADDR} "${SLASH}" ${NETMASK} >> ${KS}
+	fi
 elif [ ${OSVERSION%%/*} == "ovs" ]; then
-	ifcfg_interface br0 ${IPADDR} "${SLASH}" ${NETMASK} Bridge >> ${KS}
+	if [ ${DISK:-sda} != "xvda" ]; then
+		ifcfg_interface br0 ${IPADDR} "${SLASH}" ${NETMASK} Bridge >> ${KS}
+	fi
 	if [ ${BONDED} -eq 0 ]; then
 		bonding 0 >> ${KS}
 		bridgeAddInterface bond0 br0 >> ${KS}
@@ -284,11 +290,15 @@ elif [ ${OSVERSION%%/*} == "ovs" ]; then
 else
 	if [ ${BONDED} -eq 0 ]; then
 		bonding 0 >> ${KS}
-		ifcfg_interface bond0 ${IPADDR} "${SLASH}" ${NETMASK} >> ${KS}
+		if [ ${DISK:-sda} != "xvda" ]; then
+			ifcfg_interface bond0 ${IPADDR} "${SLASH}" ${NETMASK} >> ${KS}
+		fi
 		ifenslave_interface ${INTFACE:-eth0} bond0 >> ${KS}
 		ifenslave_interface ${INTFACE:0:${#INTFACE}-1}$((${INTFACE:${#INTFACE}-1}+1)) bond0 >> ${KS}
 	else
-		ifcfg_interface ${INTFACE:-eth0} ${IPADDR} "${SLASH}" ${NETMASK} >> ${KS}
+		if [ ${DISK:-sda} != "xvda" ]; then
+			ifcfg_interface ${INTFACE:-eth0} ${IPADDR} "${SLASH}" ${NETMASK} >> ${KS}
+		fi
 	fi
 fi
 
