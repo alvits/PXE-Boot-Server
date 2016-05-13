@@ -6,7 +6,7 @@ params="$@"
 while read line; do
 	if [ ${line:0:1} != "#" ]; then
 		if [ "$line" != "${line/=/}" ]; then
-			declare ${line%%=*}="${line#*=}"
+			export ${line%%=*}="${line#*=}"
 			if [ -n "${HOSTSFILE}" ]; then
 				HOSTSFILE=${HOSTSFILE##*/}
 				> /usr/local/Downloads/include/hosts/${HOSTSFILE##*/}
