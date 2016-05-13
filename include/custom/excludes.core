@@ -45,6 +45,8 @@
 -NetworkManager-glib
 -NetworkManager-*
 ##-nss_db
+-nfs-utils
+-nfs-utils-lib
 -ntsysv
 -paps
 -pcmciautils
@@ -54,6 +56,7 @@
 -pirut
 ##-policycoreutils
 ##-portmap
+-portreserve
 -ppp
 -psacct
 -rdate

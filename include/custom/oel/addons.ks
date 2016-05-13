@@ -1,11 +1,9 @@
-uln-internal-setup
-PXE-Boot-Server-Repository
-ntp
 ##device-mapper-multipath
-ncompress
+PXE-Boot-Server-Repository
 curl
-xorg-x11-xauth
+dracut-network
+ncompress
+ntp
 sssd-ldap
--nfs-utils
--nfs-utils-lib
--portreserve
+uln-internal-setup
+xorg-x11-xauth

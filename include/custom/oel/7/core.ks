@@ -3,7 +3,7 @@
 @system-admin-tools
 @server-platform
 @large-systems
-kernel-uek
--kernel
 grub2
 grub2-efi
+kernel-uek
+-kernel
