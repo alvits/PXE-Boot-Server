@@ -68,13 +68,17 @@ if [ -z "${HOST}" ]; then
 fi
 
 if [ -z "${IPADDR}" ]; then
-	for IPADDR in 10.132.65.{40..254}; do
+	for IPADDR in 10.132.65.{40..256}; do
 		if ping -c 1 $IPADDR > /dev/null 2>&1; then
 			continue
 		else
 			break
 		fi
 	done
+	if ! ipcalc -sc ${IPADDR}${SLASH:-" "}${NETMASK}; then
+		echo "We've run out of available IP addresses."
+		usage
+	fi
 fi
 
 eval $(ipcalc -s -n -m -b ${IPADDR}${SLASH:-" "}${NETMASK})
