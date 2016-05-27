@@ -257,6 +257,9 @@ initialize ${DISK} "${SWAP}" ${SOURCE} ${OSVERSION} ${ARCH} '' '' "${ROOTPW:-\$1
 
 if [ ${DISK:-sda} != "xvda" ]; then
 	network ${HOST} ${GATEWAY} >> ${KS}
+else
+	${ECHO} "StaticRoute=$GATEWAY" >> ${KS}
+	${ECHO} %include ${SOURCE}/include/network/fix-network.ks >> ${KS}
 fi
 
 if [ ${XEN:-0} -eq 1 ]; then
