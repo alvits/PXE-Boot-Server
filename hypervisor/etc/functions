@@ -86,3 +86,6 @@ eval $(ipcalc -s -n -m -b ${IPADDR}${SLASH:-" "}${NETMASK})
 if [ -z "${GATEWAY}" ]; then
 	GATEWAY=${NETWORK%.*}.$(( ${NETWORK##*.} + 1 ))
 fi
+
+vgname=$(vgs -ovg_name --noheadings 2>/dev/null)
+vgname=${vgname##* }

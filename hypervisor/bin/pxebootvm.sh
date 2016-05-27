@@ -8,7 +8,7 @@ if [ -z "${OSVERSION}" ]; then
 fi
 
 ks="ks=http://10.132.64.40/os/kickstart/${HOST}/ks.cfg"
-disk="['phy:/dev/vg_tmpsc1/${HOST}-os,xvda,w']"
+disk="['phy:/dev/${vgname}/${HOST}-os,xvda,w']"
 repo="method=http://10.132.64.40/os/${OSVERSION}/x86_64/"
 bootloader_args="['--location','http://10.132.64.40/os/${OSVERSION}/x86_64','--kernel','images/pxeboot/vmlinuz','--ramdisk','images/pxeboot/initrd.img']"
 
