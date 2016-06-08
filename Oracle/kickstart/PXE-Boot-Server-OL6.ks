@@ -79,7 +79,7 @@ sed -i 's|^\(exec /sbin/mingetty\) \(\$TTY\)$|\1 --autologin root \2|g' /etc/ini
 cat<<FSTAB >> /etc/fstab
 /dev/sr1	/var/lib/tftpboot/os/oel/6.6/x86_64	iso9660	ro,noauto	0 0
 /dev/sr2	/var/lib/tftpboot/os/oel/5.10/x86_64	iso9660	ro,noauto	0 0
-/dev/sr3	/var/lib/tftpboot/os/ovs/3.3/x86_64	iso9660	ro,noauto	0 0
+/dev/sr3	/var/lib/tftpboot/os/ovs/3.4/x86_64	iso9660	ro,noauto	0 0
 /dev/xvde	/usr/local/bin				ext4	defaults,noauto	1 2
 FSTAB
 %end

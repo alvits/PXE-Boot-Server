@@ -165,7 +165,7 @@ net.core.netdev_max_backlog = 10240
 ##
 SYSCTLEOF
 mkdir -p /var/lib/tftpboot/os/oel/{6.6,5.10}/x86_64
-mkdir -p /var/lib/tftpboot/os/ovs/3.3/x86_64
+mkdir -p /var/lib/tftpboot/os/ovs/3.4/x86_64
 mkdir /var/lib/tftpboot/pxelinux.cfg
 ln /usr/share/syslinux/pxelinux.0 /var/lib/tftpboot/pxelinux.0
 ln /usr/share/syslinux/vesamenu.c32 /var/lib/tftpboot/vesamenu.c32

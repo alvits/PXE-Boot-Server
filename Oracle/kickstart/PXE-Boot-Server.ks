@@ -122,15 +122,15 @@ Where=/var/lib/tftpboot/os/oel/5.10/x86_64
 Type=iso9660
 Options=ro
 SYSTEMD
-cat<<-SYSTEMD >> /etc/systemd/system/multi-user.target.wants/var-lib-tftpboot-os-ovs-3.3-x86_64.mount
+cat<<-SYSTEMD >> /etc/systemd/system/multi-user.target.wants/var-lib-tftpboot-os-ovs-3.4-x86_64.mount
 [Unit]
-Description=OVS 3.3 x86_64 Install Directory
+Description=OVS 3.4 x86_64 Install Directory
 Before=local-fs.target
 ConditionPathExists=/dev/sr3
 
 [Mount]
 What=/dev/sr3
-Where=/var/lib/tftpboot/os/ovs/3.3/x86_64
+Where=/var/lib/tftpboot/os/ovs/3.4/x86_64
 Type=iso9660
 Options=ro
 SYSTEMD
