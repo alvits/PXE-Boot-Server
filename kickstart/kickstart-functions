@@ -12,7 +12,6 @@ ECHO=/bin/echo
 PRINTF=/usr/bin/printf
 IPCALC=/bin/ipcalc
 RM=/bin/rm
-TR=/usr/bin/tr
 CAT=/bin/cat
 CP=/bin/cp
 MKDIR=/bin/mkdir
@@ -48,10 +47,10 @@ cleanup() {
 # parameters:
 # prompt message
 yesno() {
+	declare -u YESNO
 	while [ -z "${YESNO}" ]; do
 		printf "${1} " >&2
 		read YESNO
-		YESNO=$(${ECHO} ${YESNO}|${TR} '[:lower:]' '[:upper:]')
 		case ${YESNO} in
 			Y|YES)
 				return 0
