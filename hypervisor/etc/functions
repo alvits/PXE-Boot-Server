@@ -88,4 +88,4 @@ if [ -z "${GATEWAY}" ]; then
 fi
 
 vgname=$(vgs -ovg_name --noheadings 2>/dev/null)
-vgname=${vgname##* }
+vgname=${vgname// }
