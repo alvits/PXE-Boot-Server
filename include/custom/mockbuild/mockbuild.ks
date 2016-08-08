@@ -5,7 +5,9 @@ bzip2-devel
 checkpolicy
 curl-devel
 dev86
+dejagnu
 e2fsprogs-devel
+expect
 flex
 gcc-c++
 gcc-gfortran
@@ -22,12 +24,15 @@ gtk2-devel
 iasl
 imake
 ipxe-roms-qemu
+iso-codes
+kernel-devel
 libaio-devel
 libuuid-devel
 libX11-devel
 libxml2-devel
 m4
 mingw64-binutils
+mingw64-filesystem
 mkisofs
 mtools
 ncurses-devel
@@ -44,10 +49,12 @@ rpm-build
 rpm-sign
 SDL-devel
 seabios-bin
+sharutils
 syslinux
 syslinux-extlinux
 systemd
 systemd-devel
+tcl
 texi2html
 texinfo
 texlive-courier
@@ -59,6 +66,7 @@ transfig
 udev
 valgrind
 wget
+xml-common
 xz-devel
 yajl-devel
 zlib-devel
