@@ -3,7 +3,7 @@
 return > /dev/null 2>&1
 # parameters:
 # -d <device> storage device (default: sda)
-# -v <distro/ver> OS version (default: oel/6.6)
+# -v <distro/ver> OS version (default: oel/6.7)
 # -a <arch> architecture (default: x86_64)
 # -s <source> (default: http://${INETADDR}/os)
 # -I <iface> boot interface (default: eth0)
@@ -31,7 +31,7 @@ usage() {
 ${CAT}<<-EOF
 	usage: ${0##*/} [-d <target disk>] [-v <distro/ver>] [-a <arch>] [-s <install source>] [-I <ks boot interface>] [-S <swapsize in MB>] [-e mac] [-i <ip address>] [ -n <hostname>] [-g <gateway>] [-m {<netmask>|<prefix>}] [-p <private IP/prefix> ] [{-b|-u}] [{-x|-o}] [-q] [-h] [-P <root password>]
 	where:	-d target disk - is host's internal storage device. (default sda)
-	 	-v distro/ver - is OS distribution and version (default oel/6.6)
+	 	-v distro/ver - is OS distribution and version (default oel/6.7)
 	 	-a arch - is hardware or virtual architecture (default x86_64)
 	 	-s install source - is the url of the repository where installation media is located
 	 	-h - prints this message and exit
@@ -59,7 +59,7 @@ exit
 . ${0%/*}/OpenStack
 
 DISK=sda
-OSVERSION=oel/6.6
+OSVERSION=oel/6.7
 ARCH=x86_64
 INTFACE=eth0
 username=oracle

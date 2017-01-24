@@ -98,27 +98,27 @@ ln /etc/systemd/system/getty@tty1.service.d/autologin.conf /etc/systemd/system/g
 ln /etc/systemd/system/getty@tty1.service.d/autologin.conf /etc/systemd/system/getty@tty4.service.d/autologin.conf
 ln /etc/systemd/system/getty@tty1.service.d/autologin.conf /etc/systemd/system/getty@tty5.service.d/autologin.conf
 
-cat<<-SYSTEMD >> /etc/systemd/system/multi-user.target.wants/var-lib-tftpboot-os-oel-6.6-x86_64.mount
+cat<<-SYSTEMD >> /etc/systemd/system/multi-user.target.wants/var-lib-tftpboot-os-oel-7.2-x86_64.mount
 [Unit]
-Description=OEL 6.6 x86_64 Install Directory
+Description=OEL 7.2 x86_64 Install Directory
 Before=local-fs.target
 ConditionPathExists=/dev/sr1
 
 [Mount]
 What=/dev/sr1
-Where=/var/lib/tftpboot/os/oel/6.6/x86_64
+Where=/var/lib/tftpboot/os/oel/7.2/x86_64
 Type=iso9660
 Options=ro
 SYSTEMD
-cat<<-SYSTEMD >> /etc/systemd/system/multi-user.target.wants/var-lib-tftpboot-os-oel-5.10-x86_64.mount
+cat<<-SYSTEMD >> /etc/systemd/system/multi-user.target.wants/var-lib-tftpboot-os-oel-6.7-x86_64.mount
 [Unit]
-Description=OEL 5.10 x86_64 Install Directory
+Description=OEL 6.7 x86_64 Install Directory
 Before=local-fs.target
 ConditionPathExists=/dev/sr2
 
 [Mount]
 What=/dev/sr2
-Where=/var/lib/tftpboot/os/oel/5.10/x86_64
+Where=/var/lib/tftpboot/os/oel/6.7/x86_64
 Type=iso9660
 Options=ro
 SYSTEMD

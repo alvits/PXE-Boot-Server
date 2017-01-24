@@ -3,7 +3,7 @@ SLASH=/
 usage() {
 	cat<<-EOF
 		Usage:	${0##*/} {[-v osversion] [-i hostip] [-m {netmask|/prefix}] [-g gateway] | [-h]} hostname
-		where:	-v osversion is one of oel/6.6 ovs/3.4 oel/7.1
+		where:	-v osversion is one of oel/6.7 ovs/3.4 oel/7.2
 		 	-i hostip is the ip address being assigned to the host
 		 	-m netmask/prefix is the netmask or prefix being assigned to host
 		 	-g gateway is the default router of the host
