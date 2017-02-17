@@ -9,6 +9,7 @@ dejagnu
 e2fsprogs-devel
 expect
 flex
+GeoIP-devel
 gcc-c++
 gcc-gfortran
 gcc-objc
@@ -25,11 +26,19 @@ iasl
 imake
 ipxe-roms-qemu
 iso-codes
+json-c-devel
 kernel-devel
 libaio-devel
+libcap-devel
+libdbi-devel
+libdbi-dbd-sqlite
+libesmtp-devel
+libnet-devel
+libtool
 libuuid-devel
 libX11-devel
 libxml2-devel
+libxslt
 m4
 mingw64-binutils
 mingw64-filesystem
@@ -55,6 +64,7 @@ syslinux-extlinux
 systemd
 systemd-devel
 tcl
+tcp_wrappers-devel
 texi2html
 texinfo
 texlive-courier
