@@ -139,7 +139,7 @@ initialize() {
 		%include ${SOURCE}/include/custom/${OSVER%%/*}/authconfig.${OPSTACK:-0}.ks
 		%include ${SOURCE}/include/custom/${OSVER%%/*}/firewall.${OPSTACK:-0}.ks
 		%include ${SOURCE}/include/custom/${OSVER%%/*}/services.${OPSTACK:-0}.ks
-		%include ${SOURCE|/include/custom/${OSVER%%.*}/selinux.ks
+		%include ${SOURCE}/include/custom/${OSVER%%.*}/selinux.ks
 		install
 		keyboard us
 		lang ${6:-en_US.UTF-8}
@@ -369,7 +369,7 @@ updateSysctl() {
 }
 
 updateSemanage() {
-	${ECHO} %include ${SOURCE|/include/custom/${OSVER%%.*}/updateSemanage.ks
+	${ECHO} %include ${SOURCE}/include/custom/${OSVER%%.*}/updateSemanage.ks
 }
 
 # parameters:
