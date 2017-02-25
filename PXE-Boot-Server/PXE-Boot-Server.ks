@@ -73,6 +73,7 @@ lokkit
 firewalld
 # Needed for EFI systems
 shim
+grub
 grub2-efi
 # ifconfig
 net-tools
@@ -229,10 +230,13 @@ if [ -d $(getent passwd $(logname)|cut -d: -f6)/Public ]; then
 	find kickstart include -type f -o -type l| cpio -pdmuvL $INSTALL_ROOT/usr/local/Downloads
 	chown -R 48:48 $INSTALL_ROOT/usr/local/Downloads
 fi
-for rhgbfile in EFI/BOOT/isolinux.cfg EFI/BOOT/grub.cfg EFI/BOOT/grub.conf isolinux/isolinux.cfg
+for rhgbfile in EFI/BOOT/isolinux.cfg EFI/BOOT/grub.cfg EFI/BOOT/BOOTX64.conf EFI/BOOT/grub.conf isolinux/isolinux.cfg
 do
 	if [ -f $LIVE_ROOT/$rhgbfile ]; then
 		sed -i 's/ rhgb//g;s/ quiet//g' $LIVE_ROOT/$rhgbfile
+		if [ $rhgbfile == EFI/BOOT/grub.conf -o $rhgbfile == EFI/BOOT/BOOTX64.conf ]; then
+			sed -i 's|/EFI/boot|/EFI/BOOT|g' $LIVE_ROOT/$rhgbfile
+		fi
 	fi
 done
 %end
