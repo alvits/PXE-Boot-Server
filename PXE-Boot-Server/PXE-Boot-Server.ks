@@ -233,10 +233,7 @@ fi
 for rhgbfile in EFI/BOOT/isolinux.cfg EFI/BOOT/grub.cfg EFI/BOOT/BOOTX64.conf EFI/BOOT/grub.conf isolinux/isolinux.cfg
 do
 	if [ -f $LIVE_ROOT/$rhgbfile ]; then
-		sed -i 's/ rhgb//g;s/ quiet//g' $LIVE_ROOT/$rhgbfile
-		if [ $rhgbfile == EFI/BOOT/grub.conf -o $rhgbfile == EFI/BOOT/BOOTX64.conf ]; then
-			sed -i 's|/EFI/boot|/EFI/BOOT|g' $LIVE_ROOT/$rhgbfile
-		fi
+		sed -i 's/ rhgb//g;s/ quiet//g;s|/EFI/boot|/EFI/BOOT|g' $LIVE_ROOT/$rhgbfile
 	fi
 done
 %end
