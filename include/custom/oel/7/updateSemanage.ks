@@ -1,1 +1,1 @@
-sed -i 's/^\(usepasswd=\)True/\1False/' /etc/selinux/semanage.conf
+sed -i 's/^\(usepasswd=\)False/\1True/' /etc/selinux/semanage.conf
