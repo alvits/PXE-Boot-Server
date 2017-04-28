@@ -2,7 +2,7 @@
 
 This project automates the creation of a PXE Boot Server on a live CD. It supports RPM based distribution only.
 
-###CREATING A PXE BOOT SERVER ON LIVE CD.
+### CREATING A PXE BOOT SERVER ON LIVE CD.
 
 To spin a live CD, `livecd-creator` is needed on the host where live CD is being created.
 
@@ -28,7 +28,7 @@ The live CD can have a different OS than the OS it will serve out to pxe clients
 
 The `%post -=-nochroot` section of the file `PXE-Boot-Server/PXE-Boot-Server.ks` can be modified to include copying an iso into the live CD image which can be mounted to `/var/lib/tftpboot/os/<distro>/<version>/<arch>` on boot. This directory will serve as the installation source.
 
-###USING THE LIVE CD PXE BOOT SERVER.
+### USING THE LIVE CD PXE BOOT SERVER.
 
 Creating a kickstart file can be interactive or batched. For interactive script, run the script `config-kickstart.sh`.
 
