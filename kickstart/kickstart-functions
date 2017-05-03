@@ -451,7 +451,7 @@ addSSSD() {
 addXENkparams() {
 	if [ ${XEN:-0} -eq 1 ]; then
 		${CAT}<<-EOF
-			if rpm -q xen-hypervisor 2>/dev/null; then
+			if rpm --quiet -q xen-hypervisor; then
 				${TAB}	xenkparams=\$(mktemp /tmp/XXXXXXXXX)
 				${TAB}	rpm -q --scripts xen-hypervisor | sed -n '/postinstall/,/postuninstall/{/^post.*install.*$/d;p}' > \$xenkparams
 				${TAB}	bash \$xenkparams 1
