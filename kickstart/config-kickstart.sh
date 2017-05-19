@@ -305,7 +305,7 @@ else
 	fi
 fi
 
-pxeMASK=$(${IPCALC} -s -m ${IPADDR}${SLASH}${NETMASK}|${SED} 's/NETMASK=//g')
+pxeMASK=$(. <(${IPCALC} -s -m ${IPADDR}${SLASH}${NETMASK});${ECHO} $NETMASK)
 if [ ${OSVER##*/} -gt 6 ]; then
 	MODE="nomodeset text"
 fi
