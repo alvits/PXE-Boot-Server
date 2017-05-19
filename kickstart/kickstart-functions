@@ -120,19 +120,19 @@ initialize() {
 			${CAT}<<-EOF
 				bootloader --location=mbr --dom0_mem="3072M dom0_max_vcpus=4 dom0_vcpus_pin=true extra_guest_irqs=64,1024" --driveorder=${1:-sda}
 			EOF
-			ksnetwork --onboot yes --device ${privateETH:-eth2} --bootproto static --ip ${privateIP} --netmask $(ipcalc -m $privateIP/$privatePREFIX|sed 's/NETMASK=//g') --gateway ${GATEWAY} ${9} --noipv6
+			ksnetwork --onboot yes --device ${privateETH:-eth2} --bootproto static --ip ${privateIP} --netmask $(. <(ipcalc -m $privateIP/$privatePREFIX);echo $NETMASK) --gateway ${GATEWAY} ${9} --noipv6
 			repo ${10}
 		else
 			${CAT}<<-EOF
 				bootloader --location=mbr --dom0_mem="2048M dom0_max_vcpus=4 dom0_vcpus_pin=true extra_guest_irqs=64,1024" --driveorder=${1:-sda}
 			EOF
-			ksnetwork --onboot yes --device ${INTFACE:-eth0} --bootproto static --ip ${IPADDR} --netmask $(ipcalc -m ${IPADDR}${SLASH}${NETMASK}|sed 's/NETMASK=//g') --gateway ${GATEWAY} ${9} --noipv6
+			ksnetwork --onboot yes --device ${INTFACE:-eth0} --bootproto static --ip ${IPADDR} --netmask $(. <(ipcalc -m ${IPADDR}${SLASH}${NETMASK});echo $NETMASK) --gateway ${GATEWAY} ${9} --noipv6
 		fi
 	else
 		${CAT}<<-EOF
 			bootloader --location=mbr --driveorder=${1:-sda} --append="quiet"
 		EOF
-		ksnetwork --onboot yes --device ${INTFACE:-eth0} --bootproto static --ip ${IPADDR} --netmask $(ipcalc -m ${IPADDR}${SLASH}${NETMASK}|sed 's/NETMASK=//g') --gateway ${GATEWAY} ${9} --noipv6
+		ksnetwork --onboot yes --device ${INTFACE:-eth0} --bootproto static --ip ${IPADDR} --netmask $(. <(ipcalc -m ${IPADDR}${SLASH}${NETMASK});echo $NETMASK) --gateway ${GATEWAY} ${9} --noipv6
 		repo ${10}
 	fi
 	${CAT}<<-EOF
