@@ -8,7 +8,7 @@ device-mapper
 cd /usr/local/Downloads
 find kickstart -type f -o -type l | xargs -n 1 -I {} ln ../Downloads/{} /usr/local/bin
 cat<<-DHCPDPOOL>/usr/local/sbin/dhcpdpool
-#!/bin/sh
+#!/bin/bash
 . /etc/sysconfig/kickstart
 DEV=\${DEV:-eth0}
 GREP=/bin/grep
@@ -22,7 +22,7 @@ RPM=/bin/rpm
 DHCPDCONF=\${DHCPDCONF:-\$(\${RPM} -ql dhcp| \${GREP} -E 'dhcpd.conf$')}
 INETADDR=\$(\${IP} -o -f inet addr show dev \${DEV}|\${AWK} '{print \$4}')
 NEXTSERVER=\${NEXTSERVER:-\${INETADDR%%/*}}
-eval \$(\${IPCALC} -n -m -b \${INETADDR})
+. <(\${IPCALC} -n -m -b \${INETADDR})
 START=\$(\${ECHO} \${NETWORK}|\${AWK} -F. '{printf("%d.%d.%d.%d",\$1,\$2,\$3,\$4+2)}')
 END=\$(\${ECHO} \${BROADCAST}|\${AWK} -F. '{printf("%d.%d.%d.%d",\$1,\$2,\$3,\$4-2)}')
 ROUTERS=\$(\${IP} route list scope global|\${AWK} '{print \$3}')
