@@ -81,7 +81,7 @@ if [ -z "${IPADDR}" ]; then
 	fi
 fi
 
-eval $(ipcalc -s -n -m -b ${IPADDR}${SLASH:-" "}${NETMASK})
+. <(ipcalc -s -n -m -b ${IPADDR}${SLASH:-" "}${NETMASK})
 
 if [ -z "${GATEWAY}" ]; then
 	GATEWAY=${NETWORK%.*}.$(( ${NETWORK##*.} + 1 ))
