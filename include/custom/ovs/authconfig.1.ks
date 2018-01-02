@@ -1,1 +1,1 @@
-authconfig --enableshadow --enablemd5
+authconfig --enableshadow --passalgo=sha512

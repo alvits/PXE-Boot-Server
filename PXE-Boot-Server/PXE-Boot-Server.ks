@@ -5,7 +5,7 @@ timezone --utc America/Los_Angeles
 
 lang en_US.UTF-8
 keyboard us
-auth --useshadow --enablemd5
+auth --useshadow --passalgo=sha512
 firewall --disabled
 selinux --disabled
 bootloader --timeout=5 --append="systemd.unit=multi-user.target selinux=0"
