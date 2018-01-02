@@ -253,7 +253,7 @@ if [ -z "$GATEWAY" ]; then
 	GATEWAY=${1%%/*}
 fi
 
-initialize ${DISK} "${SWAP}" ${SOURCE} ${OSVERSION} ${ARCH} '' '' "${ROOTPW:-\$1\$/D0WZ/Qx\$hiV59A2D7YIq/Th3OqZM/1}" '' "${Repositories}" > ${KS}
+initialize ${DISK} "${SWAP}" ${SOURCE} ${OSVERSION} ${ARCH} '' '' "${ROOTPW:-\$6\$fvuDtD8u\$1RFVG6myHQkzQ8pyjVOllv9XAqR1qVLoUawwD7zxPHIfOtt/UsW0h9kj/jnn1w9MKIEJ1UnTcjr3Dzcr8crXg/}" '' "${Repositories}" > ${KS}
 
 if [ ${DISK:-sda} != "xvda" ]; then
 	network ${HOST} ${GATEWAY} >> ${KS}
