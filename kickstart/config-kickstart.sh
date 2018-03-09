@@ -183,10 +183,8 @@ if (ping -q -c 2 uln-internal.oracle.com > /dev/null 2>&1); then
 	else
 		case ${OSVER##*/} in
 			7)
-				UEK="UEKR3"
-				;;
 			6)
-				UEK="UEKR3/latest"
+				UEK="UEKR4"
 				;;
 			*)
 				UEK="UEK/latest"
