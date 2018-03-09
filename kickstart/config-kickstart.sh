@@ -178,9 +178,8 @@ fi
 
 if (ping -q -c 2 uln-internal.oracle.com > /dev/null 2>&1); then
 	if [ ${OPSTACK:-0} -eq 1 ]; then
-		latestkernelUEKR3="ol6_UEKR3=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL6/UEKR3/latest/${ARCH}/"
-		latestRepositories="ol6_latest=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL6/latest/${ARCH}/ ASV_base=${SOURCE}/asv/6/base/ $latestkernelUEKR3"
-	else
+		latestkernelUEKR4="ol6_UEKR4=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL6/UEKR4/${ARCH}/"
+		latestRepositories="ol6_latest=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL6/latest/${ARCH}/ ASV_base=${SOURCE}/asv/6/base/ $latestkernelUEKR4
 		case ${OSVER##*/} in
 			7)
 			6)

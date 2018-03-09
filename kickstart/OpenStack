@@ -36,7 +36,7 @@ ${CAT}<<-EOF
 	rm -f /etc/init/ovs-console-tty.conf
 	sed -i '/^.*&& continue.*$/d' /etc/init/start-ttys.conf
 	sed -i 's/^\(ACTIVE_CONSOLES=\/dev\/tty\[\)[0-9]\(-[0-9]*\]\).*$/\11\2/g' /etc/sysconfig/init
-	sed -i '/\[ol6_UEKR3\]/,+4{s/^\(enabled\)=./\1=1/g}' /etc/yum.repos.d/ULN-Base.repo
+	sed -i '/\[ol6_UEKR4\]/,+4{s/^\(enabled\)=./\1=1/g}' /etc/yum.repos.d/ULN-Base.repo
 	sed -i 's/^.*\(LIBVIRTD_ARGS="--listen"\).*$/\1/g' /etc/sysconfig/libvirtd
 	sed -i 's/^.*\(listen_tls = 0\).*$/\1/g;s/^.*\(listen_tcp = 1\).*$/\1/g;s/^.*\(auth_tcp = "none"\).*$/\1/g' /etc/libvirt/libvirtd.conf
 EOF
