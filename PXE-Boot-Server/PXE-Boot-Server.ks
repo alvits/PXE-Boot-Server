@@ -165,7 +165,7 @@ net.core.wmem_max = 16777216
 net.core.netdev_max_backlog = 10240
 ##
 SYSCTLEOF
-mkdir -p /var/lib/tftpboot/os/oel/{7.2,6.7}/x86_64
+mkdir -p /var/lib/tftpboot/os/oel/{7.4,6.9}/x86_64
 mkdir -p /var/lib/tftpboot/os/ovs/3.4/x86_64
 mkdir /var/lib/tftpboot/pxelinux.cfg
 ln /usr/share/syslinux/pxelinux.0 /var/lib/tftpboot/pxelinux.0

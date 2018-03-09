@@ -77,8 +77,8 @@ chmod +x /usr/local/sbin/dhcpdpool
 sed -i 's|^\(exec /sbin/mingetty\) \(\$TTY\)$|\1 --autologin root \2|g' /etc/init/tty.conf
 
 cat<<FSTAB >> /etc/fstab
-/dev/sr1	/var/lib/tftpboot/os/oel/7.2/x86_64	iso9660	ro,noauto	0 0
-/dev/sr2	/var/lib/tftpboot/os/oel/6.7/x86_64	iso9660	ro,noauto	0 0
+/dev/sr1	/var/lib/tftpboot/os/oel/7.4/x86_64	iso9660	ro,noauto	0 0
+/dev/sr2	/var/lib/tftpboot/os/oel/6.9/x86_64	iso9660	ro,noauto	0 0
 /dev/sr3	/var/lib/tftpboot/os/ovs/3.4/x86_64	iso9660	ro,noauto	0 0
 /dev/xvde	/usr/local/bin				ext4	defaults,noauto	1 2
 FSTAB
