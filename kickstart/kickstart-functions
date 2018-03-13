@@ -126,13 +126,13 @@ initialize() {
 			${CAT}<<-EOF
 				bootloader --location=mbr --dom0_mem="2048M dom0_max_vcpus=4 dom0_vcpus_pin=true extra_guest_irqs=64,1024" --driveorder=${1:-sda}
 			EOF
-			ksnetwork --onboot yes --device ${INTFACE:-eth0} --bootproto static --ip ${IPADDR} --netmask $(. <(ipcalc -m ${IPADDR}${SLASH}${NETMASK});echo $NETMASK) --gateway ${GATEWAY} ${9} --noipv6
+			ksnetwork --onboot yes --device bootif --bootproto static --ip ${IPADDR} --netmask $(. <(ipcalc -m ${IPADDR}${SLASH}${NETMASK});echo $NETMASK) --gateway ${GATEWAY} ${9} --noipv6
 		fi
 	else
 		${CAT}<<-EOF
 			bootloader --location=mbr --driveorder=${1:-sda} --append="quiet"
 		EOF
-		ksnetwork --onboot yes --device ${INTFACE:-eth0} --bootproto static --ip ${IPADDR} --netmask $(. <(ipcalc -m ${IPADDR}${SLASH}${NETMASK});echo $NETMASK) --gateway ${GATEWAY} ${9} --noipv6
+		ksnetwork --onboot yes --device bootif --bootproto static --ip ${IPADDR} --netmask $(. <(ipcalc -m ${IPADDR}${SLASH}${NETMASK});echo $NETMASK) --gateway ${GATEWAY} ${9} --noipv6
 		repo ${10}
 	fi
 	${CAT}<<-EOF
@@ -228,9 +228,14 @@ initialize() {
 
 		%post
 		SOURCE=${SOURCE}
-		ARCH=\$(uname -i)
 		OSVER=${OSVER}
-		VER=\${OSVER##*/}
+	EOF
+	${CAT}<<-'EOF'
+		ARCH=$(uname -i)
+		VER=${OSVER##*/}
+		getIF() {
+			ip -f inet -o link show | sed -n 's/^'$((${1:-0}+2))':[ 	]\+\([^:]\+\).*$/\1/p'
+		}
 	EOF
 }
 
@@ -274,10 +279,8 @@ ifcfg_interface() {
 	if [ -n "${5}" ]; then
 		${ECHO} "TYPE=${5}"
 	fi
-	if [ ${1%%[0-9]} == "eth" ]; then
-		if [ "${DISK:0:2}" == "sd" ]; then
-			${ECHO} "HWADDR=\${HWADDR}"
-		fi
+	if [ "${DISK:0:2}" == "sd" ]; then
+		${ECHO} "HWADDR=\${HWADDR}"
 	fi
 	${ECHO} "BOOTPROTO=static"
 	${ECHO} "IPADDR=${2}"

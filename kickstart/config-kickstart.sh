@@ -61,7 +61,7 @@ exit
 DISK=sda
 OSVERSION=oel/6.9
 ARCH=x86_64
-INTFACE=eth0
+INTFACE=0
 username=oracle
 groupname=dba
 
@@ -85,7 +85,7 @@ do
 		SOURCE=${OPTARG}
 		;;
 	I)
-		INTFACE=${OPTARG}
+		INTFACE=${OPTARG: -1}
 		;;
 	S)
 		SWAP=${OPTARG}
@@ -263,14 +263,14 @@ if [ ${XEN:-0} -eq 1 ]; then
 	if [ ${BONDED} -eq 0 ]; then
 		bonding 0 >> ${KS}
 		bridgeAddInterface bond0 xenbr0 >> ${KS}
-		ifenslave_interface ${INTFACE:-eth0} bond0 >> ${KS}
-		ifenslave_interface ${INTFACE:0:${#INTFACE}-1}$((${INTFACE:${#INTFACE}-1}+1)) bond0 >> ${KS}
+		ifenslave_interface '$(getIF '${INTFACE:-0}')' bond0 >> ${KS}
+		ifenslave_interface '$(getIF '$((${INTFACE:-0}+1))')' bond0 >> ${KS}
 	else
-		bridgeAddInterface ${INTFACE:-eth0} xenbr0 >> ${KS}
+		bridgeAddInterface '$(getIF '${INTFACE:-0}')' xenbr0 >> ${KS}
 	fi
 elif [ ${OPSTACK:-0} -eq 1 ]; then
 	if [ ${DISK:-sda} != "xvda" ]; then
-		ifcfg_interface ${INTFACE:-eth0} ${IPADDR} "${SLASH}" ${NETMASK} >> ${KS}
+		ifcfg_interface '$(getIF '${INTFACE:-0}')' ${IPADDR} "${SLASH}" ${NETMASK} >> ${KS}
 	fi
 elif [ ${OSVERSION%%/*} == "ovs" ]; then
 	if [ ${DISK:-sda} != "xvda" ]; then
@@ -279,12 +279,12 @@ elif [ ${OSVERSION%%/*} == "ovs" ]; then
 	if [ ${BONDED} -eq 0 ]; then
 		bonding 0 >> ${KS}
 		bridgeAddInterface bond0 br0 >> ${KS}
-		ifenslave_interface ${INTFACE:-eth0} bond0 >> ${KS}
-		ifenslave_interface ${INTFACE:0:${#INTFACE}-1}$((${INTFACE:${#INTFACE}-1}+1)) bond0 >> ${KS}
-		ifenslave_interface ${INTFACE:0:${#INTFACE}-1}$((${INTFACE:${#INTFACE}-1}+2)) bond0 >> ${KS}
-		ifenslave_interface ${INTFACE:0:${#INTFACE}-1}$((${INTFACE:${#INTFACE}-1}+3)) bond0 >> ${KS}
+		ifenslave_interface '$(getIF '${INTFACE:-0}')' bond0 >> ${KS}
+		ifenslave_interface '$(getIF '$((${INTFACE:-0}+1))')' bond0 >> ${KS}
+		ifenslave_interface '$(getIF '$((${INTFACE:-0}+2))')' bond0 >> ${KS}
+		ifenslave_interface '$(getIF '$((${INTFACE:-0}+3))')' bond0 >> ${KS}
 	else
-		bridgeAddInterface ${INTFACE:-eth0} br0 >> ${KS}
+		bridgeAddInterface '$(getIF '${INTFACE:-0}')' br0 >> ${KS}
 	fi
 else
 	if [ ${BONDED} -eq 0 ]; then
@@ -292,11 +292,11 @@ else
 		if [ ${DISK:-sda} != "xvda" ]; then
 			ifcfg_interface bond0 ${IPADDR} "${SLASH}" ${NETMASK} >> ${KS}
 		fi
-		ifenslave_interface ${INTFACE:-eth0} bond0 >> ${KS}
-		ifenslave_interface ${INTFACE:0:${#INTFACE}-1}$((${INTFACE:${#INTFACE}-1}+1)) bond0 >> ${KS}
+		ifenslave_interface '$(getIF '${INTFACE:-0}')' bond0 >> ${KS}
+		ifenslave_interface '$(getIF '$((${INTFACE:-0}+1))')' bond0 >> ${KS}
 	else
 		if [ ${DISK:-sda} != "xvda" ]; then
-			ifcfg_interface ${INTFACE:-eth0} ${IPADDR} "${SLASH}" ${NETMASK} >> ${KS}
+			ifcfg_interface '$(getIF '${INTFACE:-0}')' ${IPADDR} "${SLASH}" ${NETMASK} >> ${KS}
 		fi
 	fi
 fi
@@ -307,11 +307,11 @@ if [ ${OSVER##*/} -gt 6 ]; then
 fi
 if [ -n "$MAC" ]; then
 	${ECHO} "default ${HOST}" > ${TFTPBOOTDIR}/01-${MAC}
-	pxeBoot ${HOST} ${OSVERSION} ${ARCH} ${SOURCE}/kickstart/${HOST}/ks.cfg ${SOURCE}/${OSVERSION}/${ARCH}/ ${INTFACE:-eth0} "${IPADDR}" "${pxeMASK}" "${GATEWAY}" "${MODE}" 10.209.76.198 >> ${TFTPBOOTDIR}/01-${MAC}
-	#efiBoot ${HOST} ${OSVERSION} ${ARCH} ${SOURCE}/kickstart/${HOST}/ks.cfg ${SOURCE}/${OSVERSION}/${ARCH}/ ${INTFACE:-eth0} "${IPADDR}" "${pxeMASK}" "${GATEWAY}" "${MODE}" 10.209.76.198 >> ${TFTPBOOTDIR}/../01-${MAC}
+	pxeBoot ${HOST} ${OSVERSION} ${ARCH} ${SOURCE}/kickstart/${HOST}/ks.cfg ${SOURCE}/${OSVERSION}/${ARCH}/ bootif "${IPADDR}" "${pxeMASK}" "${GATEWAY}" "${MODE}" 10.209.76.198 >> ${TFTPBOOTDIR}/01-${MAC}
+	#efiBoot ${HOST} ${OSVERSION} ${ARCH} ${SOURCE}/kickstart/${HOST}/ks.cfg ${SOURCE}/${OSVERSION}/${ARCH}/ bootif "${IPADDR}" "${pxeMASK}" "${GATEWAY}" "${MODE}" 10.209.76.198 >> ${TFTPBOOTDIR}/../01-${MAC}
 fi
 pxeBootCleanup ${HOST} > /dev/null 2>&1
-pxeBoot ${HOST} ${OSVERSION} ${ARCH} ${SOURCE}/kickstart/${HOST}/ks.cfg ${SOURCE}/${OSVERSION}/${ARCH}/ ${INTFACE:-eth0} "${IPADDR}" "${pxeMASK}" "${GATEWAY}" "${MODE}" 10.209.76.198 >> ${TFTPBOOTDIR}/default
+pxeBoot ${HOST} ${OSVERSION} ${ARCH} ${SOURCE}/kickstart/${HOST}/ks.cfg ${SOURCE}/${OSVERSION}/${ARCH}/ bootif "${IPADDR}" "${pxeMASK}" "${GATEWAY}" "${MODE}" 10.209.76.198 >> ${TFTPBOOTDIR}/default
 
 if [ -n "$privateIP" -a -n "$privatePREFIX" -o -z "$QUIET" ]; then
 	if [ -z "$QUIET" ]; then
