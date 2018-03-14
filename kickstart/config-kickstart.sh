@@ -11,6 +11,7 @@ return > /dev/null 2>&1
 # -h help
 # -e ether (mac) address
 # -i ip
+# -l use latest repositories when available
 # -n hostname
 # -g gateway
 # -G group
@@ -29,7 +30,7 @@ return > /dev/null 2>&1
 
 usage() {
 ${CAT}<<-EOF
-	usage: ${0##*/} [-d <target disk>] [-v <distro/ver>] [-a <arch>] [-s <install source>] [-I <ks boot interface>] [-S <swapsize in MB>] [-e mac] [-i <ip address>] [ -n <hostname>] [-g <gateway>] [-m {<netmask>|<prefix>}] [-p <private IP/prefix> ] [{-b|-u}] [{-x|-o}] [-q] [-h] [-P <root password>]
+	usage: ${0##*/} [-d <target disk>] [-v <distro/ver>] [-a <arch>] [-s <install source>] [-I <ks boot interface>] [-S <swapsize in MB>] [-e mac] [-i <ip address>] [ -n <hostname>] [-g <gateway>] [-m {<netmask>|<prefix>}] [-p <private IP/prefix> ] [{-b|-u}] [{-x|-o}] [-q] [-h] [-P <root password>] [-l]
 	where:	-d target disk - is host's internal storage device. (default sda)
 	 	-v distro/ver - is OS distribution and version (default oel/6.9)
 	 	-a arch - is hardware or virtual architecture (default x86_64)
@@ -37,6 +38,7 @@ ${CAT}<<-EOF
 	 	-h - prints this message and exit
 	 	-e mac address - is the ether address of the bare metal or virtual host
 	 	-i ip address - is the IP assigned to host
+	 	-l use latest repositories when available
 	 	-n hostname - is the assigned hostname
 	 	-g gateway - is the default route of the host
 	 	-G groupname - create groupname. default is dba
@@ -65,7 +67,7 @@ INTFACE=0
 username=oracle
 groupname=dba
 
-while getopts ":d:v:a:s:I:S:e:i:n:g:G:xqm:p:P:U:r:kbuho" OPT
+while getopts ":d:v:a:s:I:S:e:i:n:g:G:xqm:p:P:U:r:klbuho" OPT
 do
 	case ${OPT} in
 	d)
@@ -96,6 +98,9 @@ do
 		;;
 	i)
 		IPADDR=${OPTARG}
+		;;
+	l)
+		USE_LATEST_REPO=1
 		;;
 	n)
 		HOST=${OPTARG}
@@ -176,18 +181,20 @@ else
 	Cluster=${SOURCE}/${OSVER}Server/${ARCH}/Cluster
 fi
 
-if (ping -q -c 2 uln-internal.oracle.com > /dev/null 2>&1); then
-	latestkernelUEKR4="ol6_UEKR4=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL6/UEKR4/${ARCH}/"
-	latestRepositories="ol6_latest=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL6/latest/${ARCH}/ ASV_base=${SOURCE}/asv/6/base/ $latestkernelUEKR4"
-	case ${OSVER##*/} in
-		5)
-			UEK="UEK/latest"
-			;;
-		*)
-			UEK="UEKR4"
-			;;
-	esac
-	latestRepositories="ol${OSVER#*/}_${UEK}=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL${OSVER#*/}/${UEK}/${ARCH}/ ol${OSVER#*/}_latest=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL${OSVER#*/}/latest/${ARCH}/ ASV_latest=${SOURCE}/asv/${OSVER#*/}/latest/"
+if [ ${USE_LATEST_REPO:-0} -eq 1 -o ${OPSTACK:-0} -eq 1 ]; then
+	if (ping -q -c 2 uln-internal.oracle.com > /dev/null 2>&1); then
+		latestkernelUEKR4="ol6_UEKR4=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL6/UEKR4/${ARCH}/"
+		latestRepositories="ol6_latest=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL6/latest/${ARCH}/ ASV_base=${SOURCE}/asv/6/base/ $latestkernelUEKR4"
+		case ${OSVER##*/} in
+			5)
+				UEK="UEK/latest"
+				;;
+			*)
+				UEK="UEKR4"
+				;;
+		esac
+		latestRepositories="ol${OSVER#*/}_${UEK}=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL${OSVER#*/}/${UEK}/${ARCH}/ ol${OSVER#*/}_latest=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL${OSVER#*/}/latest/${ARCH}/ ASV_latest=${SOURCE}/asv/${OSVER#*/}/latest/"
+	fi
 fi
 
 if [ "${DISK:0:2}" != "sd" ]; then
