@@ -152,10 +152,10 @@ do
 		[ -n "$privateIP" ] && [ -n "privatePREFIX" ] || usage
 		;;
 	P)
-		if [ "${OPTARG:0:3}" = '$1$' ]; then
+		if [ "${OPTARG:0:3}" = '$6$' ]; then
 			ROOTPW=${OPTARG}
 		else
-			ROOTPW=$(openssl passwd -1 "$OPTARG")
+			ROOTPW=$(python -c "import crypt; print(crypt.crypt('${OPTARG}', crypt.mksalt(crypt.METHOD_SHA512)[:11]+'\$'))")
 		fi
 		;;
 	r)

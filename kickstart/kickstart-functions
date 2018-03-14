@@ -143,8 +143,8 @@ initialize() {
 		install
 		keyboard us
 		lang ${6:-en_US.UTF-8}
-		rootpw --iscrypted ${8:-"\$6\$fvuDtD8u\$1RFVG6myHQkzQ8pyjVOllv9XAqR1qVLoUawwD7zxPHIfOtt/UsW0h9kj/jnn1w9MKIEJ1UnTcjr3Dzcr8crXg/"}
-		sshpw --username=alvits "\$1\$uhUskY/C\$WvZ.5zv54L0Txbacam9iC0" --iscrypted
+		rootpw --iscrypted ${8:-'\$6\$fvuDtD8u\$1RFVG6myHQkzQ8pyjVOllv9XAqR1qVLoUawwD7zxPHIfOtt/UsW0h9kj/jnn1w9MKIEJ1UnTcjr3Dzcr8crXg/'}
+		sshpw --username=alvits \$6\$Dh.jd9yM\$xUvfiutp5RaeBq3XK0ggCA.jZpaxIs2YJTjgaNyvEbg/663OHRsLS2ygFX5tJiQP7R/fovS5wDM3gSCN.61Xl0 --iscrypted
 		timezone --utc America/Los_Angeles
 		reboot --eject
 
