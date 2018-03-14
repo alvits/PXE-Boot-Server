@@ -6,12 +6,12 @@
 part biosboot --fstype=biosboot --size=1 --ondisk=${DISK:-xvda}
 part /boot --fstype=ext4 --fsoptions="defaults,discard" --size=512 --ondisk=${DISK:-xvda}
 part pv.100000 --size=1 --grow --ondisk=${DISK:-xvda}
-volgroup ${vgname} --pesize=32768 pv.100000
-logvol swap --vgname=${vgname} --fstype=swap --name=lv_swap --recommended
-logvol none --${thinpool:-thinp}ool --vgname=${vgname} --name=${thinpool:-thinp} --size=1 --grow
-logvol / --vgname=${vgname} --thin --poolname ${thinpool:-thinp} --fstype=ext4 --fsoptions="defaults,discard" --name=lv_root --size=1024
-logvol /usr --vgname=${vgname} --thin --poolname ${thinpool:-thinp} --fstype=ext4 --fsoptions="defaults,discard" --name=lv_usr --size=5120
-logvol /var --vgname=${vgname} --thin --poolname ${thinpool:-thinp} --fstype=ext4 --fsoptions="defaults,discard" --name=lv_var --size=3072
-logvol /tmp --vgname=${vgname} --thin --poolname ${thinpool:-thinp} --fstype=ext4 --fsoptions="defaults,discard" --name=lv_tmp --size=4096
-logvol /home --vgname=${vgname} --thin --poolname ${thinpool:-thinp} --fstype=ext4 --fsoptions="defaults,discard" --name=lv_home --size=1024
-logvol /${datadisk:-u01} --vgname=${vgname} --thin --poolname ${thinpool:-thinp} --fstype=ext4 --fsoptions="defaults,discard" --name=lv_${datadisk:-u01} --percent=17
+volgroup ${vgname:-vg00} --pesize=32768 pv.100000
+logvol swap --vgname=${vgname:-vg00} --fstype=swap --name=lv_swap --recommended
+logvol none --thinpool --vgname=${vgname:-vg00} --name=${thinpool:-thinp} --size=1 --grow
+logvol / --vgname=${vgname:-vg00} --thin --poolname ${thinpool:-thinp} --fstype=ext4 --fsoptions="defaults,discard" --name=lv_root --size=1024
+logvol /usr --vgname=${vgname:-vg00} --thin --poolname ${thinpool:-thinp} --fstype=ext4 --fsoptions="defaults,discard" --name=lv_usr --size=5120
+logvol /var --vgname=${vgname:-vg00} --thin --poolname ${thinpool:-thinp} --fstype=ext4 --fsoptions="defaults,discard" --name=lv_var --size=3072
+logvol /tmp --vgname=${vgname:-vg00} --thin --poolname ${thinpool:-thinp} --fstype=ext4 --fsoptions="defaults,discard" --name=lv_tmp --size=4096
+logvol /home --vgname=${vgname:-vg00} --thin --poolname ${thinpool:-thinp} --fstype=ext4 --fsoptions="defaults,discard" --name=lv_home --size=1024
+logvol /${datadisk:-u01} --vgname=${vgname:-vg00} --thin --poolname ${thinpool:-thinp} --fstype=ext4 --fsoptions="defaults,discard" --name=lv_${datadisk:-u01} --percent=17

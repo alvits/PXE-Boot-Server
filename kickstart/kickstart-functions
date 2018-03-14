@@ -194,6 +194,7 @@ initialize() {
 		DISK=$DISK
 		datadisk=$datadisk
 		vgname=vg_${HOST//-/}
+		thinpool=tp_${HOST//-/}
 	EOF
 	if [ ${OPSTACK:-0} -eq 1 ]; then
 		${CAT}<<-EOF
@@ -234,7 +235,7 @@ initialize() {
 		ARCH=$(uname -i)
 		VER=${OSVER##*/}
 		getIF() {
-			ip -f inet -o link show | sed -n 's/^'$((${1:-0}+2))':[ 	]\+\([^:]\+\).*$/\1/p'
+		 	ip -f inet -o link show | sed -n 's/^'$((${1:-0}+2))':[ 	]\+\([^:]\+\).*$/\1/p'
 		}
 	EOF
 }
