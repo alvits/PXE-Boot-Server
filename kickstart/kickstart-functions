@@ -643,11 +643,16 @@ runAS() {
 # parameters
 # OS version
 enableUEKR4() {
-	${ECHO} "yum-config-manager --disablerepo=ol${1%%.*}_UEKR3* --enablerepo=ol${1%%.*}_UEKR4"
+	${CAT}<<-EOF
+		yum-config-manager --disablerepo=* --enable ol${1%%.*}_UEKR4
+		yum-config-manager --disablerepo=* --disable ol${1%%.*}_UEKR3*
+	EOF
 }
 
 # parameters None
 xenPOSTinstall() {
-	${ECHO} "grub2-set-default 'Oracle Linux Server, with Xen hypervisor'"
-	${ECHO} "touch /.autorelabel"
+	${CAT}<<-EOF
+		grub2-set-default 'Oracle Linux Server, with Xen hypervisor'
+		touch /.autorelabel
+	EOF
 }

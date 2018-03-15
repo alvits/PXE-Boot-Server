@@ -24,6 +24,7 @@
 -dhcpv6-client
 -dhcpv6_client
 -dnsmasq
+-dracut-config-rescue
 -fbset
 -finger
 -firstboot
