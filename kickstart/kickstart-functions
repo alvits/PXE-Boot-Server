@@ -639,3 +639,15 @@ runAS() {
 		runuser -ls /bin/sh ${user} -c "${*}"
 	EOF
 }
+
+# parameters
+# OS version
+enableUEKR4() {
+	${ECHO} "yum-config-manager --disablerepo=ol${1%%.*}_UEKR3* --enablerepo=ol${1%%.*}_UEKR4"
+}
+
+# parameters None
+xenPOSTinstall() {
+	${ECHO} "grub2-set-default 'Oracle Linux Server, with Xen hypervisor'"
+	${ECHO} "touch /.autorelabel"
+}

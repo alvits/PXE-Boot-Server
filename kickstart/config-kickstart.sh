@@ -145,6 +145,7 @@ do
 		OPSTACK=1
 		unset XEN
 		BONDED=1
+		USE_LATEST_REPO=1
 		;;
 	p)
 		privateIP=${OPTARG%%/*}
@@ -181,10 +182,8 @@ else
 	Cluster=${SOURCE}/${OSVER}Server/${ARCH}/Cluster
 fi
 
-if [ ${USE_LATEST_REPO:-0} -eq 1 -o ${OPSTACK:-0} -eq 1 ]; then
+if [ ${USE_LATEST_REPO:-0} -eq 1 ]; then
 	if (ping -q -c 2 uln-internal.oracle.com > /dev/null 2>&1); then
-		latestkernelUEKR4="ol6_UEKR4=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL6/UEKR4/${ARCH}/"
-		latestRepositories="ol6_latest=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL6/latest/${ARCH}/ ASV_base=${SOURCE}/asv/6/base/ $latestkernelUEKR4"
 		case ${OSVER##*/} in
 			5)
 				UEK="UEK/latest"
@@ -193,7 +192,7 @@ if [ ${USE_LATEST_REPO:-0} -eq 1 -o ${OPSTACK:-0} -eq 1 ]; then
 				UEK="UEKR4"
 				;;
 		esac
-		latestRepositories="ol${OSVER#*/}_${UEK}=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL${OSVER#*/}/${UEK}/${ARCH}/ ol${OSVER#*/}_latest=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL${OSVER#*/}/latest/${ARCH}/ ASV_latest=${SOURCE}/asv/${OSVER#*/}/latest/"
+		latestRepositories="ol${OSVER#*/}_${UEK}=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL${OSVER#*/}/${UEK}/${ARCH}/ ol${OSVER#*/}_latest=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL${OSVER#*/}/latest/${ARCH}/ ol${OSVER#*/}_internal=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL${OSVER#*/}/internal/ ASV_latest=${SOURCE}/asv/${OSVER#*/}/latest/"
 	fi
 fi
 
@@ -255,6 +254,8 @@ if [ -z "$GATEWAY" ]; then
 fi
 
 initialize ${DISK} "${SWAP}" ${SOURCE} ${OSVERSION} ${ARCH} '' '' "${ROOTPW:-\$6\$fvuDtD8u\$1RFVG6myHQkzQ8pyjVOllv9XAqR1qVLoUawwD7zxPHIfOtt/UsW0h9kj/jnn1w9MKIEJ1UnTcjr3Dzcr8crXg/}" '' "${Repositories}" > ${KS}
+
+enableUEKR4 ${OSVER##*/} >> ${KS}
 
 if [ ${DISK:-sda} != "xvda" ]; then
 	network ${HOST} ${GATEWAY} >> ${KS}
@@ -383,6 +384,9 @@ fi
 autoextendTHINpool >> ${KS}
 if [ -n "${commands}" ]; then
 	runAS ${runAsUser} "${commands}" >> ${KS}
+fi
+if [ ${XEN:-0} -eq 1 ]; then
+	xenPOSTinstall >> ${KS}
 fi
 ${MKDIR} ${KICKSTART}/${HOST} 2> /dev/null
 echo "%end" >> ${KS}
