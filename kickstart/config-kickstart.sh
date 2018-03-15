@@ -385,9 +385,6 @@ autoextendTHINpool >> ${KS}
 if [ -n "${commands}" ]; then
 	runAS ${runAsUser} "${commands}" >> ${KS}
 fi
-if [ ${XEN:-0} -eq 1 ]; then
-	xenPOSTinstall >> ${KS}
-fi
 ${MKDIR} ${KICKSTART}/${HOST} 2> /dev/null
 echo "%end" >> ${KS}
 ${MV} --backup=numbered ${KS} ${KICKSTART}/${HOST}/ks.cfg

@@ -648,11 +648,3 @@ enableUEKR4() {
 		yum-config-manager --disablerepo=* --disable ol${1%%.*}_UEKR3*
 	EOF
 }
-
-# parameters None
-xenPOSTinstall() {
-	${CAT}<<-EOF
-		grub2-set-default 'Oracle Linux Server, with Xen hypervisor'
-		touch /.autorelabel
-	EOF
-}
