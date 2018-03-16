@@ -4,6 +4,5 @@
 @server-platform
 @large-systems
 grub2
-grub2-efi
 kernel-uek
 -kernel

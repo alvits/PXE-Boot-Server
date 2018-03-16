@@ -156,12 +156,14 @@ initialize() {
 	EOF
 	if [ ${XEN:-0} -eq 1 ]; then
 		${ECHO} @xen
-		${ECHO} '-grub2-efi-x64'
 		if [ ${KDEV:-0} -eq 1 ]; then
 			${ECHO} @xen-devel
 		fi
 	else
 		${ECHO} "@compat-libraries"
+	fi
+	if [ -n "$GRUB2EFI" ]; then
+		${ECHO} %include ${SOURCE}/include/custom/grub2-efi.ks
 	fi
 	${ECHO} %include ${SOURCE}/include/custom/excludes.core
 	if [ ${OPSTACK:-0} -eq 1 ]; then

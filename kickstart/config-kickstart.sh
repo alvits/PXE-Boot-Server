@@ -10,6 +10,7 @@ return > /dev/null 2>&1
 # -S <swapsize>
 # -h help
 # -e ether (mac) address
+# -E install grub2-efi-x64
 # -i ip
 # -l use latest repositories when available
 # -n hostname
@@ -30,13 +31,14 @@ return > /dev/null 2>&1
 
 usage() {
 ${CAT}<<-EOF
-	usage: ${0##*/} [-d <target disk>] [-v <distro/ver>] [-a <arch>] [-s <install source>] [-I <ks boot interface>] [-S <swapsize in MB>] [-e mac] [-i <ip address>] [ -n <hostname>] [-g <gateway>] [-m {<netmask>|<prefix>}] [-p <private IP/prefix> ] [{-b|-u}] [{-x|-o}] [-q] [-h] [-P <root password>] [-l]
+	usage: ${0##*/} [-d <target disk>] [-v <distro/ver>] [-a <arch>] [-s <install source>] [-I <ks boot interface>] [-S <swapsize in MB>] [-e mac] [-i <ip address>] [ -n <hostname>] [-g <gateway>] [-m {<netmask>|<prefix>}] [-p <private IP/prefix> ] [{-b|-u}] [{-x|-o}] [-q] [-h] [-P <root password>] [-l] [-E]
 	where:	-d target disk - is host's internal storage device. (default sda)
 	 	-v distro/ver - is OS distribution and version (default oel/6.9)
 	 	-a arch - is hardware or virtual architecture (default x86_64)
 	 	-s install source - is the url of the repository where installation media is located
 	 	-h - prints this message and exit
 	 	-e mac address - is the ether address of the bare metal or virtual host
+		-E install grub2-efi-x64 (required by systems running EFI)
 	 	-i ip address - is the IP assigned to host
 	 	-l use latest repositories when available
 	 	-n hostname - is the assigned hostname
@@ -67,7 +69,7 @@ INTFACE=0
 username=oracle
 groupname=dba
 
-while getopts ":d:v:a:s:I:S:e:i:n:g:G:xqm:p:P:U:r:klbuho" OPT
+while getopts ":d:v:a:s:I:S:e:i:n:g:G:xqm:p:P:U:r:Eklbuho" OPT
 do
 	case ${OPT} in
 	d)
@@ -95,6 +97,9 @@ do
 	e)
 		MAC=${OPTARG//:/-}
 		MAC=${MAC,,}
+		;;
+	E)
+		GRUB2EFI=grub2-efi
 		;;
 	i)
 		IPADDR=${OPTARG}
