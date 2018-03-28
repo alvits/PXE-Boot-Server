@@ -647,7 +647,7 @@ runAS() {
 # OS version
 enableUEKR4() {
 	${CAT}<<-EOF
-		yum-config-manager --disablerepo=* --enable ol${1%%.*}_UEKR4
+		yum-config-manager --disablerepo=* --enable ol${1%%.*}_UEKR4 ol${1%%.*}_optional_latest ol${1%%.*}_internal ol${1%%.*}_developer_EPEL
 		yum-config-manager --disablerepo=* --disable ol${1%%.*}_UEKR3*
 	EOF
 }
