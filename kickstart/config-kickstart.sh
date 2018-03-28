@@ -215,6 +215,9 @@ else
 	[ -n "${UEKdir}" ] && UEK="UEK=${SOURCE}/${OSVERSION}/${ARCH}/${UEKdir##*/}/" || UEK=""
 	ASV_base="ASV_base=${SOURCE}/asv/${OSVER#*/}/base/"
 	Repositories="$latestRepositories $ASV_base ${UEK}"
+	if [ ${XEN:-0} -eq 1 ]; then
+		Repositories="$Repositories ol${OSVER#*/}_developer_EPEL=http://$(gethostip -d uln-internal.oracle.com)/uln/OracleLinux/OL${OSVER#*/}/developer_EPEL/${ARCH}/"
+	fi
 fi
 
 unset latestRepositories
