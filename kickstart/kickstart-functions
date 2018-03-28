@@ -156,6 +156,7 @@ initialize() {
 	EOF
 	if [ ${XEN:-0} -eq 1 ]; then
 		${ECHO} @xen
+		${ECHO} qemu
 		if [ ${KDEV:-0} -eq 1 ]; then
 			${ECHO} @xen-devel
 		fi
