@@ -261,7 +261,7 @@ if [ -z "$GATEWAY" ]; then
 	GATEWAY=${1%%/*}
 fi
 
-initialize ${DISK} "${SWAP}" ${SOURCE} ${OSVERSION} ${ARCH} '' '' "${ROOTPW:-\$6\$fvuDtD8u\$1RFVG6myHQkzQ8pyjVOllv9XAqR1qVLoUawwD7zxPHIfOtt/UsW0h9kj/jnn1w9MKIEJ1UnTcjr3Dzcr8crXg/}" '' "${Repositories}" > ${KS}
+initialize ${DISK} "${SWAP}" ${SOURCE} ${OSVERSION} ${ARCH} '' '' "${ROOTPW:-\$6\$fvuDtD8u\$1RFVG6myHQkzQ8pyjVOllv9XAqR1qVLoUawwD7zxPHIfOtt/UsW0h9kj/jnn1w9MKIEJ1UnTcjr3Dzcr8crXg/}" '' "${Repositories}" ${username:-oracle} ${groupname:-dba} "${SSHKEYS}" > ${KS}
 
 enableUEKR4 ${OSVER##*/} >> ${KS}
 
@@ -379,13 +379,13 @@ updateNtp 10.132.10.137 10.132.9.97 ${GATEWAY} >> ${KS}
 updateResolv us.oracle.com us.oracle.com 10.209.76.198 10.209.76.197 192.135.82.132 >> ${KS}
 if [ ${OSVERSION%%/*} != "ovs" ]; then
 	limits >> ${KS}
-	createUser ${username} 1000 ${groupname} 1000 >> ${KS}
+	#createUser ${username} 1000 ${groupname} 1000 >> ${KS}
 	sudoer ${username} >> ${KS}
-	addAUTHkeys ${SSHKEYS} ${username} >> ${KS}
+	#addAUTHkeys ${SSHKEYS} ${username} >> ${KS}
 	addSSSD >> ${KS}
 	addXENkparams >> ${KS}
 fi
-addAUTHkeys ${SSHKEYS} root >> ${KS}
+#addAUTHkeys ${SSHKEYS} root >> ${KS}
 if [ ${OPSTACK:-0} -eq 1 ]; then
 	customizeOpenStack >> ${KS}
 fi

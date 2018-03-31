@@ -105,6 +105,9 @@ get_IP() {
 # root password
 # network
 # additional repository
+# user to be created (default: oracle)
+# group to be created (default: dba)
+# sshkey file
 initialize() {
 	local OSVER=${4:-"${OSVERSION}"}
 	local ARCH=${5:-"${ARCH}"}
@@ -126,14 +129,20 @@ initialize() {
 			${CAT}<<-EOF
 				bootloader --location=mbr --dom0_mem="2048M dom0_max_vcpus=4 dom0_vcpus_pin=true extra_guest_irqs=64,1024" --driveorder=${1:-sda}
 			EOF
-			ksnetwork --onboot yes --device bootif --bootproto static --ip ${IPADDR} --netmask $(. <(ipcalc -m ${IPADDR}${SLASH}${NETMASK});echo $NETMASK) --gateway ${GATEWAY} ${9} --noipv6
+			ksnetwork --onboot yes --bootproto static --ip ${IPADDR} --netmask $(. <(ipcalc -m ${IPADDR}${SLASH}${NETMASK});echo $NETMASK) --gateway ${GATEWAY} ${9} --noipv6
 		fi
 	else
 		${CAT}<<-EOF
 			bootloader --location=mbr --driveorder=${1:-sda} --append="quiet"
 		EOF
-		ksnetwork --onboot yes --device bootif --bootproto static --ip ${IPADDR} --netmask $(. <(ipcalc -m ${IPADDR}${SLASH}${NETMASK});echo $NETMASK) --gateway ${GATEWAY} ${9} --noipv6
+		ksnetwork --onboot yes --bootproto static --ip ${IPADDR} --netmask $(. <(ipcalc -m ${IPADDR}${SLASH}${NETMASK});echo $NETMASK) --gateway ${GATEWAY} ${9} --noipv6
 		repo ${10}
+	fi
+	createUser ${OSVER} ${11:-oracle} 1000 ${12:-dba} 1000
+	local osversion=${OSVER##*/}
+	if [ ${osversion//./} -gt 71 ]; then
+		addAUTHkeys ${13} ${11:-oracle}
+		addAUTHkeys ${13} root
 	fi
 	${CAT}<<-EOF
 		%include ${SOURCE}/include/custom/${OSVER%%/*}/authconfig.${OPSTACK:-0}.ks
@@ -242,6 +251,10 @@ initialize() {
 		 	ip -f inet -o link show | sed -n 's/^'$((${1:-0}+2))':[ 	]\+\([^:]\+\).*$/\1/p'
 		}
 	EOF
+	if [ ${osversion//./} -lt 72 ]; then
+		addAUTHkeys6 ${13} ${11:-oracle}
+		addAUTHkeys6 ${13} root
+	fi
 }
 
 # Add bonding module
@@ -420,6 +433,17 @@ updateNtp() {
 addAUTHkeys() {
 if [ -f /usr/local/Downloads/include/ssh-keys/${1##*/} ]; then
 	${CAT}<<-EOF
+		sshkey --username ${2:-root} "$(</usr/local/Downloads/include/ssh-keys/${1##*/})"
+	EOF
+fi
+}
+
+# parameters:
+# authorized_keys source
+# username where keys will be registered
+addAUTHkeys6() {
+if [ -f /usr/local/Downloads/include/ssh-keys/${1##*/} ]; then
+	${CAT}<<-EOF
 		mkdir --mode=0700 \$(getent passwd ${2:-root} | cut -d: -f6)/.ssh
 		cat<<-authEOF > \$(getent passwd ${2:-root} | cut -d: -f6)/.ssh/authorized_keys
 			%include ${SOURCE}/include/ssh-keys/${1##*/}
@@ -556,7 +580,7 @@ limits() {
 # group id
 createGroup() {
 	${CAT}<<-EOF
-	groupadd -g ${2} ${1} 2>/dev/null
+	group --name ${1} --gid ${2}
 	EOF
 }
 
@@ -567,19 +591,19 @@ createGroup() {
 # group id
 # passwd
 createUser() {
+	local OSVER=${1##*/}
+	shift
 	createGroup $3 $4
-	${CAT}<<-EOF
-		useradd -u ${2} -g ${3} -s /bin/bash ${1} 2>/dev/null
-	EOF
-	if [ $# -gt 4 ]; then
-		${CAT}<<-EOF
-			echo $5 | passwd $1 --stdin
-		EOF
+	if [ ${OSVER%.*} -gt 6 ]; then
+		local group=gid
+		local groupparam=$4
 	else
-		${CAT}<<-EOF
-			passwd -l $1
-		EOF
+		local group=groups
+		local groupparam=$3
 	fi
+	${CAT}<<-EOF
+		user --name ${1} ${5:+'--password'} ${5} --${group} ${groupparam}
+	EOF
 }
 
 #parameters:
