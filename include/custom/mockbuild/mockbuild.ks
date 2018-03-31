@@ -9,7 +9,7 @@ dejagnu
 e2fsprogs-devel
 expect
 flex
-GeoIP-devel
+#GeoIP-devel
 gcc-c++
 gcc-gfortran
 gcc-objc
@@ -30,6 +30,7 @@ json-c-devel
 kernel-devel
 libaio-devel
 libcap-devel
+livecd-tools
 libdbi-devel
 libdbi-dbd-sqlite
 libesmtp-devel
@@ -48,10 +49,11 @@ ncurses-devel
 ocaml
 ocaml-findlib
 openssl-devel
-pciutils-devel
+#pciutils-devel
 perl-Pod-*
 perl-Text-*
 python-devel
+python-imgcreate
 readline-devel
 redhat-rpm-config
 rpm-build
