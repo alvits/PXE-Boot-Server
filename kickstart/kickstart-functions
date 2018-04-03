@@ -140,7 +140,7 @@ initialize() {
 	fi
 	createUser ${OSVER} ${11:-oracle} 1000 ${12:-dba} 1000
 	local osversion=${OSVER##*/}
-	if [ ${osversion//./} -gt 71 ]; then
+	if [ ${osversion//./} -gt 72 ]; then
 		addAUTHkeys ${13} ${11:-oracle}
 		addAUTHkeys ${13} root
 	fi
@@ -251,7 +251,7 @@ initialize() {
 		 	ip -f inet -o link show | sed -n 's/^'$((${1:-0}+2))':[ 	]\+\([^:]\+\).*$/\1/p'
 		}
 	EOF
-	if [ ${osversion//./} -lt 72 ]; then
+	if [ ${osversion//./} -lt 73 ]; then
 		addAUTHkeys6 ${13} ${11:-oracle}
 		addAUTHkeys6 ${13} root
 	fi

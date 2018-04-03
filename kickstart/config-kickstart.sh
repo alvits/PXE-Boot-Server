@@ -379,9 +379,7 @@ updateNtp 10.132.10.137 10.132.9.97 ${GATEWAY} >> ${KS}
 updateResolv us.oracle.com us.oracle.com 10.209.76.198 10.209.76.197 192.135.82.132 >> ${KS}
 if [ ${OSVERSION%%/*} != "ovs" ]; then
 	limits >> ${KS}
-	#createUser ${username} 1000 ${groupname} 1000 >> ${KS}
 	sudoer ${username} >> ${KS}
-	#addAUTHkeys ${SSHKEYS} ${username} >> ${KS}
 	addSSSD >> ${KS}
 	addXENkparams >> ${KS}
 fi
