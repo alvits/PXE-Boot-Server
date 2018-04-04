@@ -580,11 +580,12 @@ limits() {
 # group id
 createGroup() {
 	${CAT}<<-EOF
-	group --name ${1} --gid ${2}
+	group --name=${1} ${2:+"--gid=${2}"}
 	EOF
 }
 
 # parameters:
+# os version
 # username
 # user id
 # group name
@@ -602,7 +603,7 @@ createUser() {
 		local groupparam=$3
 	fi
 	${CAT}<<-EOF
-		user --name ${1} ${5:+'--password'} ${5} --${group} ${groupparam}
+		user --name=${1} ${5:+"--password='${5}'"} ${3:+"--${group}=${groupparam}"} ${2:+"--uid=${2}"}
 	EOF
 }
 
