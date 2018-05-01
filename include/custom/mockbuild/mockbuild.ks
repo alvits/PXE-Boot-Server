@@ -50,6 +50,7 @@ ocaml
 ocaml-findlib
 openssl-devel
 #pciutils-devel
+prelink
 perl-Pod-*
 perl-Text-*
 python-devel
