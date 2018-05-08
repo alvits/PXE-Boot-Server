@@ -298,7 +298,9 @@ ifcfg_interface() {
 		${ECHO} "TYPE=${5}"
 	fi
 	if [ "${DISK:0:2}" == "sd" ]; then
-		${ECHO} "HWADDR=\${HWADDR}"
+		if [ "${1:0: -1}" != "bond" -a "${1:0: -1}" != "xenbr" ]; then
+			${ECHO} "HWADDR=\${HWADDR}"
+		fi
 	fi
 	${ECHO} "BOOTPROTO=static"
 	${ECHO} "IPADDR=${2}"
@@ -350,7 +352,9 @@ bridgeAddInterface() {
 		NM_CONTROLLED=no
 	IFEOF
 	if [ "${DISK:0:2}" == "sd" ]; then
-		${ECHO} "HWADDR=\${HWADDR}"
+		if [ "${1:0: -1}" != "bond" ]; then
+			${ECHO} "HWADDR=\${HWADDR}"
+		fi
 	fi
 	${ECHO} EOF
 }
