@@ -263,7 +263,7 @@ bonding() {
 	${CAT}<<-BONDINGEOF
 		cat<<-EOF>>/etc/modprobe.d/bonding.conf
 		alias bond${1:-0} bonding
-		options bond${1:-0} mode=3 miimon=250 updelay=500 downdelay=500
+		options bond${1:-0} mode=5 miimon=100 updelay=500 downdelay=500
 		EOF
 	BONDINGEOF
 }
