@@ -1,5 +1,6 @@
 ##device-mapper-multipath
 PXE-Boot-Server-Repository
+cloud-utils-growpart
 curl
 dracut-network
 ncompress
