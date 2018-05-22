@@ -4,7 +4,7 @@ cloud-utils-growpart
 curl
 dracut-network
 ncompress
-ntp
+chrony
 sssd-ldap
 uln-internal-setup
 xorg-x11-xauth

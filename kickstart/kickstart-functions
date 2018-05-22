@@ -419,13 +419,12 @@ updateResolv() {
 # parameter: ntp servers
 updateNtp() {
 	${CAT}<<-EOF
-		sed -i 's/^server/# server/g;s/^fudge/# fudge/g' /etc/ntp.conf
+		sed -i 's/^server/# server/g;s/^fudge/# fudge/g' /etc/chrony.conf
 	EOF
 	while [ $# -gt 0 -a -n "${1}" ]
 	do
 		${CAT}<<-EOF
-			echo "restrict ${1} nomodify notrap # choke router restrict" >> /etc/ntp.conf
-			echo "server   ${1}                 # choke router restrict" >> /etc/ntp.conf
+			echo "server   ${1}" >> /etc/chrony.conf
 		EOF
 		shift
 	done
