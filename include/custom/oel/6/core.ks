@@ -5,4 +5,3 @@
 @large-systems
 grub2
 kernel-uek
--kernel

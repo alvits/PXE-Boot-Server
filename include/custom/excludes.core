@@ -38,10 +38,12 @@
 -iptstate
 -irda-utils
 -jwhois
+-kernel
 -kudzu
 -man
 -man-pages
 -mesa-libGL
+-microcode_ctl
 -NetworkManager
 -NetworkManager-glib
 -NetworkManager-*

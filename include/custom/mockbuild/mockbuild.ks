@@ -27,7 +27,7 @@ imake
 ipxe-roms-qemu
 iso-codes
 json-c-devel
-kernel-devel
+kernel-uek-devel
 libaio-devel
 libcap-devel
 livecd-tools
@@ -50,7 +50,6 @@ ocaml
 ocaml-findlib
 openssl-devel
 #pciutils-devel
-prelink
 perl-Pod-*
 perl-Text-*
 python-devel
