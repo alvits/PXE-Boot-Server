@@ -9,7 +9,7 @@ auth --useshadow --passalgo=sha512
 firewall --disabled
 selinux --disabled
 bootloader --timeout=5 --append="systemd.unit=multi-user.target selinux=0"
-part / --size 1024 --fstype ext4
+part / --size 1024 --fstype xfs
 services --enabled=network,httpd,dhcpd
 
 %packages --excludedocs --nobase --ignoremissing
