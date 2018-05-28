@@ -390,7 +390,20 @@ fi
 }
 
 updateSysctl() {
-	${ECHO} %include ${SOURCE}/include/sysctl.ks
+	${CAT}<<-SYSCTLEOF
+		${CAT}<<-MISC > /etc/sysctl.d/98-misc.conf
+			%include ${SOURCE}/include/sysctl/98-misc.ks
+		MISC
+		${CAT}<<-MSGBUFF > /etc/sysctl.d/98-msgbuff.conf
+			%include ${SOURCE}/include/sysctl/98-msgbuff.ks
+		MSGBUFF
+		${CAT}<<-NETWORK > /etc/sysctl.d/98-network.conf
+			%include ${SOURCE}/include/sysctl/98-network.ks
+		NETWORK
+		${CAT}<<-SHAREDMEM > /etc/sysctl.d/98-sharedmem.conf
+			%include ${SOURCE}/include/sysctl/98-sharedmem.ks
+		SHAREDMEM
+	SYSCTLEOF
 }
 
 updateSemanage() {
