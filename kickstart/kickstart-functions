@@ -393,7 +393,7 @@ updateSysctl() {
 	for eachSYSCTL in /usr/local/Downloads/include/sysctl/*; do
 		eachTARGET=${eachSYSCTL%.ks}.conf
 		${CAT}<<-EOF
-			${CAT}<<-SYSCTLEOF > /etc/sysctl.d/${eachTARGET##*/}
+			cat<<-SYSCTLEOF > /etc/sysctl.d/${eachTARGET##*/}
 				%include ${SOURCE}/include/sysctl/${eachSYSCTL##*/}
 			SYSCTLEOF
 		EOF
