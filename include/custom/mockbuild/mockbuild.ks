@@ -1,8 +1,11 @@
 autoconf
 automake
 bison
+btrfs-progs
+btrfs-progs-devel
 bzip2-devel
 checkpolicy
+cmake
 curl-devel
 dev86
 dejagnu
@@ -17,9 +20,12 @@ gcc-objc++
 gcc-x86_64-linux-gnu
 gettext
 ghostscript
-glibc-devel.i686
-glibc-devel.x86_64
+git
+glibc-devel
+glibc-static
 gnutls-devel
+golang-bin
+golang-github-cpuguy83-go-md2man
 graphviz
 gtk2-devel
 iasl
@@ -34,6 +40,9 @@ livecd-tools
 libdbi-devel
 libdbi-dbd-sqlite
 libesmtp-devel
+libseccomp
+libseccomp-devel
+libtool-ltdl-devel
 libnet-devel
 libtool
 libuuid-devel
