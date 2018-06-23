@@ -133,7 +133,7 @@ initialize() {
 		fi
 	else
 		${CAT}<<-EOF
-			bootloader --location=mbr --driveorder=${1:-sda} --append="quiet"
+			bootloader --location=mbr --driveorder=${1:-sda} --append="nopti noibrs noibpb"
 		EOF
 		ksnetwork --onboot yes --bootproto static --ip ${IPADDR} --netmask $(. <(ipcalc -m ${IPADDR}${SLASH}${NETMASK});echo $NETMASK) --gateway ${GATEWAY} ${9} --noipv6
 		repo ${10}
@@ -684,6 +684,6 @@ runAS() {
 enableUEKR4() {
 	${CAT}<<-EOF
 		yum-config-manager --disablerepo=* --enable ol${1%%.*}_UEKR4 ol${1%%.*}_optional_latest ol${1%%.*}_internal ol${1%%.*}_developer_EPEL
-		yum-config-manager --disablerepo=* --disable ol${1%%.*}_UEKR3*
+		yum-config-manager --disablerepo=* --disable ol${1%%.*}_UEKR3* ol${1%%.*}_UEK_latest
 	EOF
 }
